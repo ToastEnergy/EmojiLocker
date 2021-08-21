@@ -1,4 +1,4 @@
-# Emoji Locker
+# Emoji Locker.
 
 A simple [Discord](https://discord.com) bot with the purpose of permitting the usage of a Discord API's feature not included in the official clients, restricting emojis usage using a role whitelist.
 
