@@ -1,4 +1,5 @@
 import discord
+import inspect
 from discord.ext import commands
 
 
@@ -224,7 +225,7 @@ class Core(commands.Cog):
         await ctx.reply(embed=embed, view=view)
         await view.wait()
 
-    @commands.command()
+    @commands.command(usage='<role,role...>')
     @commands.guild_only()
     @commands.has_guild_permissions(manage_emojis=True)
     @commands.bot_has_permissions(manage_emojis=True)
@@ -244,16 +245,23 @@ if you select **overwrite** it will be locked only to the roles that you just sp
         await ctx.reply(embed=embed, view=view)
         await view.wait()
 
-    @commands.command()
+    @commands.command(usage='<emoji,emoji...> | <role,role...>')
     @commands.guild_only()
     @commands.has_guild_permissions(manage_emojis=True)
     @commands.bot_has_permissions(manage_emojis=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.max_concurrency(1, commands.BucketType.user)
-    async def multiple(self, ctx, *, args):
+    # None because hardcoding :tm:
+    async def multiple(self, ctx, *, args=None):
 
         # Not using commands.Greedy because the parsing ambiguities ruins the overall UX
+        if not args:
+            raise commands.MissingRequiredArgument(inspect.Parameter(
+                name='emojis', kind=inspect.Parameter.POSITIONAL_ONLY))
         args = args.split("|")
+        if len(args) == 1:
+            raise commands.MissingRequiredArgument(inspect.Parameter(
+                name='roles', kind=inspect.Parameter.POSITIONAL_ONLY))
         emojis = args[0].split(',')
         roles = args[1].split(',')
         ctx.emojis = set([await commands.EmojiConverter().convert(ctx, emoji.strip()) for emoji in emojis])

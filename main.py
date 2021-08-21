@@ -1,4 +1,5 @@
-import discord
+import aiohttp
+import aiohttp
 import config
 import os
 from utils import database
@@ -14,6 +15,8 @@ class EmojiLocker(commands.Bot):
         super().__init__(command_prefix=self.get_custom_prefix)
         self.load_extension('jishaku')
         self.guilds_cache = {}
+        self.tid = 0
+        self.tracebacks = {}
         self.first_ready = True
         self.default_prefix = commands.when_mentioned_or(
             config.prefix+' ', config.prefix)
@@ -22,7 +25,12 @@ class EmojiLocker(commands.Bot):
         self.db = database.Database()
         await self.db.connect()
         await self.db.populate_cache(self.guilds_cache)
+        self.session = aiohttp.ClientSession()
         await super().login(*args, **kwargs)
+
+    async def close(self, *args, **kwargs):
+        await self.session.close()
+        await super().close(*args, **kwargs)
 
     async def on_ready(self):
         print(f'logged in as {self.user}')
