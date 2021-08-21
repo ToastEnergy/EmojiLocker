@@ -1,8 +1,6 @@
 import discord
 import traceback
-from discord.embeds import E
 from discord.ext import commands
-from discord.ext.commands.errors import BadArgument, RoleNotFound
 import config
 from datetime import datetime
 
@@ -33,8 +31,8 @@ class SupportView(discord.ui.View):
 errors = {
     commands.CheckFailure: True,
     commands.UserInputError: True,
-    commands.EmojiNotFound : 'Emoji "{argument}" not found, is this a default emoji?',
-    commands.RoleNotFound : True,
+    commands.EmojiNotFound: 'Emoji "{argument}" not found, is this a default emoji?',
+    commands.RoleNotFound: True,
     commands.CommandOnCooldown: True,
     commands.MaxConcurrencyReached: 'You are already using a command, please wait for it to finish'
 }
@@ -91,8 +89,6 @@ class ErrorHandler(commands.Cog):
                 description = parent_err
         else:
             description = base_error
-        
-        print(error.__dict__)
         description = description.format(**error.__dict__)
         embed = discord.Embed(title="Something went wrong.", colour=discord.Colour.red(
         ), description=description)
