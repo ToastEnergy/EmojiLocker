@@ -41,13 +41,13 @@ class LockallView(discord.ui.View):
                 else:
                     roles = self.ctx.roles
                 try:
-                    await emoji.edit(name=emoji.name, roles=self.ctx.roles)
+                    await emoji.edit(name=emoji.name, roles=roles)
                 except:
                     pass
                 i += 1
                 await message.edit(content=f'{i}/{len(self.ctx.guild.emojis)}')
             embed = discord.Embed(title='Emojis succesfully locked', color=discord.Color.green(),
-                                  description=f'''🔒 I have succesfully all of your server emojis.\n
+                                  description=f'''🔒 I have succesfully locked all of your server emojis.\n
     ℹ️ Now only the people with at least one of the roles that you specified ({','.join([r.mention for r in self.ctx.roles])}) will be able to use the emojis''')
             embed.set_footer(
                 text='If you can\'t use the emojis but you have at least one of these roles try to fully restart your Discord app')
