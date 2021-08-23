@@ -1,6 +1,7 @@
+import config
 import discord
 from discord.ext import commands
-import config
+
 
 class OwnView(discord.ui.View):
     def __init__(self, ctx):
@@ -46,6 +47,7 @@ class BaseView(OwnView):
             raise
         finally:
             self.stop()
+
 
 class LockallView(OwnView):
     def __init__(self, ctx):
@@ -95,6 +97,7 @@ class LockallView(OwnView):
         finally:
             self.stop()
 
+
 class SupportView(OwnView):
     def __init__(self, ctx):
         super().__init__(ctx)
@@ -109,4 +112,3 @@ class SupportView(OwnView):
         embed = self.ctx.embed
         embed.add_field(name='Command help', value=self.ctx.command.signature)
         await interaction.response.edit_message(view=self, embed=embed, content=None)
-

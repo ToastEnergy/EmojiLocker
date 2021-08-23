@@ -1,7 +1,10 @@
-import discord
 import inspect
+
+import discord
 from discord.ext import commands
 from utils import views
+
+
 class Core(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -125,7 +128,7 @@ if you select **overwrite** it will be locked only to the roles that you just sp
         ctx.roles = set([await commands.RoleConverter().convert(ctx, role.strip()) for role in roles])
         view = views.BaseView(ctx)
         await ctx.reply_embed(f'You are about to lock {len(ctx.emojis)} emojis to these roles : {", ".join([r.mention for r in ctx.roles])}\nContinue?',
-                       view=view)
+                              view=view)
 
         await view.wait()
 
@@ -143,7 +146,7 @@ if you select **overwrite** it will be locked only to the roles that you just sp
         ctx.roles = []
         view = views.BaseView(ctx)
         await ctx.reply_embed(f'You are about to unlock {len(ctx.emojis)} emojis\nContinue?',
-                       view=view)
+                              view=view)
 
         await view.wait()
 
