@@ -1,30 +1,9 @@
 import discord
 import traceback
 from discord.ext import commands
+from utils import views
 import config
 from datetime import datetime
-
-
-class SupportView(discord.ui.View):
-    def __init__(self, ctx):
-        super().__init__(timeout=240)
-        self.ctx: commands.Context = ctx
-        button = discord.ui.Button(
-            style=discord.ButtonStyle.url, url=config.support_server, label='Support server')
-        self.add_item(button)
-
-    @discord.ui.button(style=discord.ButtonStyle.blurple, label='Show command help')
-    async def show_help(self, button, interaction):
-        self.remove_item(button)
-        embed = self.ctx.sent_message.embeds[0]
-        embed.add_field(name='Command help', value=self.ctx.command.signature)
-        await interaction.response.edit_message(view=self, embed=embed)
-
-    async def interaction_check(self, interaction):
-        if interaction.user.id != self.ctx.author.id:
-            await interaction.response.send_message('This is being used by someone else!', ephemeral=True)
-            return False
-        return True
 
 
 # True means that we like the libs error message
@@ -74,8 +53,6 @@ class ErrorHandler(commands.Cog):
         UNKNOWN_ERROR = f'An unhandled error occured, please report this to the developers. Error code : `{self.bot.tid}`'
         self.bot.tracebacks[self.bot.tid] = traceback_
         self.bot.tid += 1
-        print(type(error))
-        print(type(error).__bases__)
         base_error = errors.get(type(error))
         if base_error == True:
             description = str(error)
@@ -90,11 +67,15 @@ class ErrorHandler(commands.Cog):
         else:
             description = base_error
         description = description.format(**error.__dict__)
-        embed = discord.Embed(title="Something went wrong.", colour=discord.Colour.red(
+        ctx.embed = discord.Embed(title="Something went wrong.", colour=discord.Colour.red(
         ), description=description)
-        embed.set_author(name=str(ctx.author),
+        ctx.embed.set_author(name=str(ctx.author),
                          icon_url=str(ctx.author.avatar))
-        ctx.sent_message = await ctx.send(embed=embed, view=SupportView(ctx))
+        if not ctx.channel.permissions_for(ctx.me).embed_links:
+            ctx.sent_message = await ctx.reply_embed(description, view=views.SupportView(ctx))
+        else:
+            ctx.sent_message = await ctx.reply_embed(embed=ctx.embed, view=views.SupportView(ctx))
+        
 
     @commands.command(hidden=True)
     @commands.is_owner()
@@ -106,7 +87,7 @@ class ErrorHandler(commands.Cog):
         for x in paginator.pages:
             embed = discord.Embed(
                 title="Traceback inspector", colour=discord.Color.red(), description=x)
-            await ctx.send(embed=embed)
+            await ctx.reply_embed(embed=embed)
 
 
 def setup(bot):

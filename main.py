@@ -9,7 +9,25 @@ os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
 os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
 os.environ["JISHAKU_HIDE"] = "True"
 
+class EmojiContext(commands.Context):
+    def __init__(self, **attrs):
+        super().__init__(**attrs)
+    
+    async def reply_embed(self, *args, **kwargs):
+        return await self.send_embed(*args,**kwargs,reference=self.message)
 
+    async def send_embed(self, *args,**kwargs):
+        if not self.channel.permissions_for(self.me).embed_links:
+            try:
+                og_content =  kwargs.pop('content',args[0])
+                og_content += '\n\n'
+            except:
+                og_content = ''
+            
+            content = f'{og_content}{kwargs.pop("embed").description}{config.no_embeds_message}'
+            return await self.send(content,**kwargs)
+        else:
+            return await self.send(*args,**kwargs)
 class EmojiLocker(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=self.get_custom_prefix)
@@ -31,6 +49,9 @@ class EmojiLocker(commands.Bot):
     async def close(self, *args, **kwargs):
         await self.session.close()
         await super().close(*args, **kwargs)
+
+    async def get_context(self, message, *, cls=EmojiContext):
+        return await super().get_context(message, cls=cls)
 
     async def on_ready(self):
         print(f'logged in as {self.user}')
