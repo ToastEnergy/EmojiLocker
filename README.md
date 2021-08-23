@@ -3,7 +3,7 @@
 A simple [Discord](https://discord.com) bot with the purpose of permitting the usage of a Discord API's feature not included in the official clients, restricting emojis usage using a role whitelist.
 
 
-This was one of my first projects and was started in 2019 and it's currently being rewritten. Written using the [discord.py](https://github.com/Rapptz/discord.py) library
+This was one of my 👕first projects and was started in 2019 and it's currently being rewritten. Written using the [discord.py](https://github.com/Rapptz/discord.py) library
 
 [![Discord Bots](https://top.gg/api/widget/609087387695316992.svg)](https://top.gg/bot/609087387695316992)
 
