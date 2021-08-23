@@ -140,6 +140,11 @@ class PacksView(OwnView):
         self.ctx.embed.set_footer(
             text=f'Page {self.visualized_page}/{self.total_pages}')
 
+    async def on_timeout(self):
+        for x in self.children:
+            x.disabled = True
+        await self.ctx.sent_message.edit(view=self)
+
     @discord.ui.button(style=discord.ButtonStyle.blurple, emoji="◀️")
     async def back(self, button, interaction):
         self.page -= 1
