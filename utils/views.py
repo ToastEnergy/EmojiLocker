@@ -112,3 +112,49 @@ class SupportView(OwnView):
         embed = self.ctx.embed
         embed.add_field(name='Command help', value=self.ctx.command.signature)
         await interaction.response.edit_message(view=self, embed=embed, content=None)
+
+
+class PacksView(OwnView):
+    def __init__(self, ctx):
+        super().__init__(ctx)
+        self.ctx: commands.Context = ctx
+        self.page = 0
+        self.total_pages = len(ctx.paginator.pages)
+        self.timeout = 60
+        self.update()
+
+    @property
+    def visualized_page(self):
+        return self.page + 1
+
+    def update(self):
+        self.children[0].disabled = False
+        self.children[2].disabled = False
+        if self.page == 0:
+            self.children[0].disabled = True
+        if self.page == self.total_pages - 1:
+            self.children[2].disabled = True
+
+        page = self.ctx.paginator.pages[self.page]
+        self.ctx.embed.description = page
+        self.ctx.embed.set_footer(
+            text=f'Page {self.visualized_page}/{self.total_pages}')
+
+    @discord.ui.button(style=discord.ButtonStyle.blurple, emoji="◀️")
+    async def back(self, button, interaction):
+        self.page -= 1
+        self.update()
+        await interaction.response.edit_message(view=self, embed=self.ctx.embed)
+
+    @discord.ui.button(style=discord.ButtonStyle.grey, emoji="⏹️")
+    async def _stop(self, button, interaction):
+        for x in self.children:
+            x.disabled = True
+        await interaction.response.edit_message(view=self)
+        self.stop()
+
+    @discord.ui.button(style=discord.ButtonStyle.blurple, emoji="▶️")
+    async def next(self, button, interaction):
+        self.page += 1
+        self.update()
+        await interaction.response.edit_message(view=self, embed=self.ctx.embed)

@@ -1,4 +1,5 @@
 import inspect
+import itertools
 import random
 
 import discord
@@ -128,6 +129,11 @@ if you select **overwrite** it will be locked only to the roles that you just sp
         ctx.emojis = set([await commands.EmojiConverter().convert(ctx, emoji.strip()) for emoji in emojis])
         ctx.roles = set([await commands.RoleConverter().convert(ctx, role.strip()) for role in roles])
         view = views.BaseView(ctx)
+        ctx.confirm_embed = discord.Embed(title='Emojis succesfully locked', color=discord.Color.green(),
+                                          description=f'''🔓 I have succesfully locked {len(ctx.emojis)} emojis\n
+ℹ️ Now only the people with at least one of the roles that you specified ({','.join([r.mention for r in ctx.roles])}) will be able to use the emojis''')
+        ctx.confirm_embed.set_footer(
+            text='If you can\'t use the emojis try to fully restart your Discord app')
         await ctx.reply_embed(f'You are about to lock {len(ctx.emojis)} emojis to these roles : {", ".join([r.mention for r in ctx.roles])}\nContinue?',
                               view=view)
 
@@ -146,6 +152,11 @@ if you select **overwrite** it will be locked only to the roles that you just sp
                                  set([await commands.EmojiConverter().convert(ctx, emoji.strip()) for emoji in emojis])))
         ctx.roles = []
         view = views.BaseView(ctx)
+        ctx.confirm_embed = discord.Embed(title='Emojis succesfully unlocked', color=discord.Color.green(),
+                                          description=f'''🔓 I have succesfully unlocked {len(ctx.emojis)} emojis\n
+ℹ️ Now everyone will be able to use the emojis''')
+        ctx.confirm_embed.set_footer(
+            text='If you can\'t use the emojis try to fully restart your Discord app')
         await ctx.reply_embed(f'You are about to unlock {len(ctx.emojis)} emojis\nContinue?',
                               view=view)
 
@@ -169,6 +180,36 @@ if you select **overwrite** it will be locked only to the roles that you just sp
 **Download link** : [Click here]({str(emoji.url)})
         """
         await ctx.reply_embed(embed=embed)
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    @commands.max_concurrency(1, commands.BucketType.user)
+    async def packs(self, ctx):
+        ctx.packs = []
+        ctx.keys = []
+        def func(x): return x.roles
+        for k, g in itertools.groupby(sorted(ctx.guild.emojis, key=func), func):
+            ctx.packs.append(list(g))
+            ctx.keys.append(k)
+
+        ctx.embed = discord.Embed(
+            title='Packs', colour=discord.Colour.from_hsv(random.random(), 1, 1))
+        ctx.paginator = commands.Paginator(prefix='', suffix='', linesep='')
+        c = 0
+        for x in ctx.packs:
+            ctx.paginator.add_line('\n\n')
+            ctx.paginator.add_line(
+                f"> **{(', '.join([role.name for role in ctx.keys[c]])) or '@everyone'}**")
+            c += 1
+            ctx.paginator.add_line('\n')
+            for em in x:
+                ctx.paginator.add_line(f"{em} ")
+        ctx.embed.description = ctx.paginator.pages[0]
+        ctx.embed.set_footer(text=f'Page 1/{len(ctx.paginator.pages)}')
+        view = views.PacksView(ctx)
+        await ctx.reply_embed(embed=ctx.embed, view=view)
+        await view.wait()
 
 
 def setup(bot):
