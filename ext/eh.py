@@ -71,10 +71,7 @@ class ErrorHandler(commands.Cog):
         ), description=description)
         ctx.embed.set_author(name=str(ctx.author),
                              icon_url=str(ctx.author.avatar))
-        if not ctx.channel.permissions_for(ctx.me).embed_links:
-            ctx.sent_message = await ctx.reply_embed(description, view=views.SupportView(ctx))
-        else:
-            ctx.sent_message = await ctx.reply_embed(embed=ctx.embed, view=views.SupportView(ctx))
+        ctx.sent_message = await ctx.reply_embed(embed=ctx.embed, view=views.SupportView(ctx))
 
     @commands.command(hidden=True)
     @commands.is_owner()
