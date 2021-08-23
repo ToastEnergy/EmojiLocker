@@ -1,4 +1,5 @@
 import inspect
+import random
 
 import discord
 from discord.ext import commands
@@ -149,6 +150,25 @@ if you select **overwrite** it will be locked only to the roles that you just sp
                               view=view)
 
         await view.wait()
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def emojiinfo(self, ctx, *, emoji: discord.Emoji):
+        embed = discord.Embed(title=emoji.name)
+        embed.colour = discord.Colour.from_hsv(random.random(), 1, 1)
+        embed.set_thumbnail(url=str(emoji.url))
+        embed.description = f"""
+**Animated?** : {emoji.animated}
+**Roles** : {", ".join([x.mention for x in emoji.roles]) or '@everyone'}
+**Guild** : {emoji.guild.name} [{emoji.guild.id}]
+**ID** : {emoji.id}
+**Available** : {emoji.available}
+**Managed by an integration?** : {emoji.managed}
+**Created at** : {emoji.created_at.strftime("%m/%d/%Y, %H:%M:%S")}
+**Download link** : [Click here]({str(emoji.url)})
+        """
+        await ctx.reply_embed(embed=embed)
 
 
 def setup(bot):
