@@ -75,10 +75,9 @@ class EmojiLocker(commands.Bot):
             return self.default_prefix(bot, message)
 
         data = self.guilds_cache.get(message.guild.id)
-
         if not data:
             return self.default_prefix(bot, message)
-        elif not data.get('prefix'):
+        if not data.get('prefix'):
             return self.default_prefix(bot, message)
         else:
             return commands.when_mentioned_or(data.get('prefix')+' ', data.get('prefix'))(bot, message)

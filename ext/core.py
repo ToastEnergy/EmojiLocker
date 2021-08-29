@@ -3,6 +3,7 @@ import itertools
 import random
 
 import discord
+from discord import guild
 from discord.ext import commands
 from utils import views
 
@@ -10,6 +11,15 @@ from utils import views
 class Core(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    async def get_persistent_roles(self, ctx):
+        data = await self.bot.db.get_roles(ctx.guild.id)
+        res = list()
+        for role in data:
+            role = ctx.guild.get_role(role['role_id'])
+            if role:
+                res.append(role)
+        return res
 
     @commands.command()
     @commands.guild_only()
@@ -22,9 +32,10 @@ class Core(commands.Cog):
         if emoji.guild != ctx.guild:
             return await ctx.reply('This emoji appears to be from another server')
         roles = roles.split(',')
+        persistent = await self.get_persistent_roles(ctx)
 
         # Raises commands.BadArgument if any of the roles are invalid
-        roles = set([await commands.RoleConverter().convert(ctx, role.strip()) for role in roles])
+        roles = set([await commands.RoleConverter().convert(ctx, role.strip()) for role in roles]).union(persistent)
 
         await emoji.edit(name=emoji.name, roles=roles)
 
@@ -96,7 +107,8 @@ class Core(commands.Cog):
     async def lockall(self, ctx, *, roles):
 
         roles = roles.split(',')
-        ctx.roles = set([await commands.RoleConverter().convert(ctx, role.strip()) for role in roles])
+        persistent = await self.get_persistent_roles(ctx)
+        ctx.roles = set([await commands.RoleConverter().convert(ctx, role.strip()) for role in roles]).union(persistent)
         embed = discord.Embed(title='Locking all emojis!', description='''Do you want to **keep** the roles in the existent setup or overwrite them?
 
 If you select **keep** an emoji already locked to @role1  will be locked to @role1 + the roles that you specified in the command
@@ -124,9 +136,10 @@ if you select **overwrite** it will be locked only to the roles that you just sp
         if len(args) == 1:
             raise commands.MissingRequiredArgument(inspect.Parameter(
                 name='roles', kind=inspect.Parameter.POSITIONAL_ONLY))
+        persistent = await self.get_persistent_roles(ctx)
         emojis = args[0].split(',')
         roles = args[1].split(',')
-        ctx.emojis = set([await commands.EmojiConverter().convert(ctx, emoji.strip()) for emoji in emojis])
+        ctx.emojis = set([await commands.EmojiConverter().convert(ctx, emoji.strip()) for emoji in emojis]).union(set(persistent))
         ctx.roles = set([await commands.RoleConverter().convert(ctx, role.strip()) for role in roles])
         view = views.BaseView(ctx)
         ctx.confirm_embed = discord.Embed(title='Emojis succesfully locked', color=discord.Color.green(),

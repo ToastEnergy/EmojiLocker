@@ -48,7 +48,8 @@ class ErrorHandler(commands.Cog):
         time = round(datetime.timestamp(datetime.now()))
         emb.add_field(name="When", value=f"<t:{time}:f>", inline=False)
         emb.add_field(name="Error", value=f"```py\n{str(error)}\n```")
-        emb.set_author(name=str(ctx.author), icon_url=str(ctx.author.display_avatar))
+        emb.set_author(name=str(ctx.author),
+                       icon_url=str(ctx.author.display_avatar))
         await self.webhook.send(f'Traceback ID : {self.bot.tid}', embed=emb)
         UNKNOWN_ERROR = f'An unhandled error occured, please report this to the developers. Error code : `{self.bot.tid}`'
         self.bot.tracebacks[self.bot.tid] = traceback_
