@@ -22,6 +22,8 @@ class ErrorHandler(commands.Cog):
         self.bot = bot
         self.webhook = discord.Webhook.from_url(
             config.error_webhook, session=bot.session)
+        self.commands_webhook = discord.Webhook.from_url(
+            config.commands_webhook, session=bot.session)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -32,7 +34,7 @@ class ErrorHandler(commands.Cog):
         invoke = ctx.message.content
         if len(invoke) > 800:
             invoke = invoke[:800]+"..."
-        emb = discord.Embed(colour=discord.Colour.red())
+        emb = discord.Embed()
         emb.add_field(name="Message",
                       value=f"`{invoke}` (`{ctx.message.id}`)", inline=False)
         emb.add_field(
@@ -50,7 +52,7 @@ class ErrorHandler(commands.Cog):
         emb.add_field(name="Error", value=f"```py\n{str(error)}\n```")
         emb.set_author(name=str(ctx.author),
                        icon_url=str(ctx.author.display_avatar))
-        await self.webhook.send(f'Traceback ID : {self.bot.tid}', embed=emb)
+        colour = discord.Color.red()
         UNKNOWN_ERROR = f'An unhandled error occured, please report this to the developers. Error code : `{self.bot.tid}`'
         self.bot.tracebacks[self.bot.tid] = traceback_
         self.bot.tid += 1
@@ -63,15 +65,19 @@ class ErrorHandler(commands.Cog):
                 description = str(error)
             elif parent_err == None:
                 description = UNKNOWN_ERROR
+                colour = discord.Color.dark_magenta()
+
             else:
                 description = parent_err
         else:
             description = base_error
         description = description.format(**error.__dict__)
-        ctx.embed = discord.Embed(title="Something went wrong.", colour=discord.Colour.red(
-        ), description=description)
+        ctx.embed = discord.Embed(
+            title="Something went wrong.", colour=colour, description=description)
         ctx.embed.set_author(name=str(ctx.author),
                              icon_url=str(ctx.author.display_avatar))
+        emb.colour = colour
+        await self.webhook.send(f'Traceback ID : {self.bot.tid}', embed=emb)
         ctx.sent_message = await ctx.reply_embed(embed=ctx.embed, view=views.SupportView(ctx))
 
     @commands.command(hidden=True)
@@ -85,6 +91,27 @@ class ErrorHandler(commands.Cog):
             embed = discord.Embed(
                 title="Traceback inspector", colour=discord.Color.red(), description=x)
             await ctx.reply_embed(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_command(self, ctx):
+        time = round(datetime.timestamp(datetime.now()))
+        emb = discord.Embed(colour=discord.Color.green())
+        emb.add_field(
+            name="Message", value=f"`{ctx.message.content}` (`{ctx.message.id}`)", inline=False)
+        emb.add_field(
+            name="Author", value=f"`{str(ctx.author)}` (`{ctx.author.id}`)", inline=False)
+        if ctx.guild:
+            emb.add_field(
+                name="Channel", value=f"`#{ctx.channel.name}` (`{ctx.channel.id}`)", inline=False)
+            emb.add_field(
+                name="Guild", value=f"`{ctx.guild.name}` (`{ctx.guild.id}`)", inline=False)
+            emb.set_thumbnail(url=str(ctx.guild.icon))
+        else:
+            emb.add_field(name="Channel", value=f"`DM Channel`", inline=False)
+        emb.add_field(name="When", value=f"<t:{time}:f>", inline=False)
+        emb.set_author(name=str(ctx.author),
+                       icon_url=str(ctx.author.display_avatar))
+        await self.commands_webhook.send(embed=emb)
 
 
 def setup(bot):

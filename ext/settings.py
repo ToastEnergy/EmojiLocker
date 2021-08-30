@@ -15,7 +15,14 @@ class Settings(commands.Cog):
             cache[guild] = {key: value}
         cache[guild].update({key: value})
 
+    async def cog_check(self, ctx):
+        if not ctx.guild:
+            raise commands.NoPrivateMessage()
+        if not ctx.author.guild_permissions.manage_guild:
+            raise commands.MissingPermissions(['Manage server'])
+
     @commands.group(invoke_without_command=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def settings(self, ctx):
         data = (await self.bot.db.get_guild(ctx.guild.id)) or {}
         prefix = data.get('prefix')
@@ -25,7 +32,7 @@ class Settings(commands.Cog):
         else:
             prefix = data.get('prefix') or 'No roles'
             roles = ', '.join(
-            map(lambda r: f'<@&{r}>', data.get('roles'))) or 'No roles'
+                map(lambda r: f'<@&{r}>', data.get('roles'))) or 'No roles'
         embed = discord.Embed(title='Emoji Locker\'s settings',
                               colour=discord.Colour.green(),
                               description=f'''**Available settings**
@@ -42,6 +49,7 @@ Use `{ctx.prefix}settings <setting>` to change a setting
         await ctx.reply_embed(embed=embed)
 
     @settings.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def prefix(self, ctx, *, prefix=None):
         if not prefix:
             data = await self.bot.db.get_guild(ctx.guild.id)
@@ -59,6 +67,7 @@ Use `{ctx.prefix}settings <setting>` to change a setting
         await ctx.reply('☑')
 
     @settings.group(invoke_without_command=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def roles(self, ctx):
         data = await self.bot.db.get_guild(ctx.guild.id)
         if not data:
@@ -73,6 +82,7 @@ Use `{ctx.prefix}settings <setting>` to change a setting
         await ctx.reply_embed(embed=embed)
 
     @roles.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def add(self, ctx, roles: commands.Greedy[discord.Role]):
         if len(roles) == 0:
             raise commands.MissingRequiredArgument(inspect.Parameter(
@@ -85,6 +95,7 @@ Use `{ctx.prefix}settings <setting>` to change a setting
         await ctx.reply('☑')
 
     @roles.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def delete(self, ctx, roles: commands.Greedy[discord.Role]):
         if len(roles) == 0:
             raise commands.MissingRequiredArgument(inspect.Parameter(
