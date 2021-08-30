@@ -20,7 +20,8 @@ class Settings(commands.Cog):
             raise commands.NoPrivateMessage()
         if not ctx.author.guild_permissions.manage_guild:
             raise commands.MissingPermissions(['Manage server'])
-
+        return True
+        
     @commands.group(invoke_without_command=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def settings(self, ctx):
