@@ -42,7 +42,7 @@ class BaseView(OwnView):
                     pass
                 i += 1
                 await message.edit(content=f'{i}/{len(self.ctx.emojis)}')
-            await message.edit(content=None, embed=self.ctx.confirm_embed)
+            await message.edit(content=None, embed=self.confirm_embed)
         except Exception as e:
             raise
         finally:
@@ -163,3 +163,80 @@ class PacksView(OwnView):
         self.page += 1
         self.update()
         await interaction.response.edit_message(view=self, embed=self.ctx.embed)
+
+
+class RoleSelectMenu(discord.ui.Select):
+    def __init__(self, ctx, roles):
+        self.ctx = ctx
+        options = []
+        for role in roles:
+            options.append(discord.SelectOption(
+                label=role.name, value=role.id))
+        super().__init__(placeholder='Select the roles',
+                         min_values=0, max_values=len(options), options=options)
+
+    async def callback(self, interaction: discord.Interaction):
+        selected = set(
+            map(lambda r: self.ctx.guild.get_role(int(r)), self.values))
+        self.view._roles[self] = selected
+        self.ctx.roles.clear()
+        for _set in self.view._roles.values():
+            self.ctx.roles = self.ctx.roles.union(_set)
+        self.ctx.roles = self.ctx.roles.union(self.ctx.persistent)
+
+
+class EmojiSelectMenu(discord.ui.Select):
+    def __init__(self, ctx, emojis):
+        self.ctx = ctx
+        self.emojis = set()
+        options = []
+        for emoji in emojis:
+            options.append(discord.SelectOption(
+                label=emoji.name, value=emoji.id, emoji=emoji))
+        super().__init__(placeholder='Select the emojis',
+                         min_values=0, max_values=len(options), options=options)
+
+    async def callback(self, interaction: discord.Interaction):
+        selected = set(
+            map(lambda r: self.ctx.bot.get_emoji(int(r)), self.values))
+        self.view._emojis[self] = selected
+        self.ctx.emojis.clear()
+        for _set in self.view._emojis.values():
+            self.ctx.emojis = self.ctx.emojis.union(_set)
+
+
+class LockAllSelectView(LockallView):
+    def __init__(self, ctx):
+        self._roles = {}
+        super().__init__(ctx)
+        for i in range(0, len(ctx.guild.roles[1:]), 25):
+            s = RoleSelectMenu(ctx, ctx.guild.roles[1:][i:i + 25])
+            self.add_item(s)
+            self._roles[s] = set()
+
+
+
+class MassUnlockSelectView(BaseView):
+    def __init__(self, ctx):
+        self._emojis = {}
+        super().__init__(ctx)
+        self.children[0].callback = self.__continue
+        for i in range(0, len(ctx.locked), 25):
+            s = EmojiSelectMenu(ctx, ctx.locked[i:i + 25])
+            self.add_item(s)
+            self._emojis[s] = set()
+
+    async def __continue(self, interaction : discord.Interaction):
+        if len(self.ctx.emojis) == 0:
+            return await interaction.response.send_message('Select at least one emoji',ephemeral=True)
+        await interaction.response.defer()
+        message = await interaction.original_message()
+        await self.do_bulk(message)  
+
+    @property
+    def confirm_embed(self):
+        return discord.Embed(title='Emojis succesfully unlocked', color=discord.Color.green(),
+                                          description=f'''🔓 I have succesfully unlocked {len(self.ctx.emojis)} emojis.\n
+ℹ️ Now everyone will be able to use all emojis in your server''').set_footer(
+            text='If you can\'t use the emojis try to fully restart your Discord app')
+
