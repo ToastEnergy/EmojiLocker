@@ -240,3 +240,44 @@ class MassUnlockSelectView(BaseView):
 ℹ️ Now everyone will be able to use all emojis in your server''').set_footer(
             text='If you can\'t use the emojis try to fully restart your Discord app')
 
+class MultipleSelectView(BaseView):
+    def __init__(self, ctx):
+        self.step = 0
+        self._emojis = {}
+        self._roles = {}
+        super().__init__(ctx)
+        self.children[0].callback = self.__continue
+        for i in range(0, len(ctx.guild.emojis), 25):
+            s = EmojiSelectMenu(ctx, ctx.guild.emojis[i:i + 25])
+            self.add_item(s)
+            self._emojis[s] = set()
+
+
+
+
+    async def __continue(self, interaction : discord.Interaction):
+        if self.step == 0:
+            if len(self.ctx.emojis) == 0:
+                return await interaction.response.send_message('Select at least one emoji',ephemeral=True)
+            self.clear_items()
+            self.add_item(self._continue)
+            self.add_item(self.cancel)
+            for i in range(0, len(self.ctx.guild.roles[1:]), 25):
+                s = RoleSelectMenu(self.ctx, self.ctx.guild.roles[1:][i:i + 25])
+                self.add_item(s)
+                self._roles[s] = set()
+            self.ctx.embed.description = "Select the roles which will be able to use the selected emojis with the menu below, then click continue"
+            await interaction.response.edit_message(view=self,embed=self.ctx.embed)
+        elif self.step == 1:
+            if len(self.ctx.roles) == 0:
+                return await interaction.response.send_message('Select at least one role',ephemeral=True)
+            await interaction.response.defer()
+            message = await interaction.original_message()
+            await self.do_bulk(message)
+        self.step += 1
+    @property
+    def confirm_embed(self):
+        return discord.Embed(title='Emojis succesfully locked', color=discord.Color.green(),
+                                          description=f'''🔓 I have succesfully locked {len(self.ctx.emojis)} emojis.\n
+ℹ️ Now only the people with at least one of the roles that you specified ({','.join([r.mention for r in self.ctx.roles])}) will be able to use the emojis''').set_footer(
+            text='If you can\'t use the emojis try to fully restart your Discord app')
