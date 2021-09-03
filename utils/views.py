@@ -1,3 +1,4 @@
+import asyncpg
 import config
 import discord
 from discord.ext import commands
@@ -321,7 +322,11 @@ class RolesView(OwnView):
     async def add_roles(self, interaction : discord.Interaction):
         await interaction.response.defer()
         roles = map(lambda r: r.id, self.ctx.roles)
-        await self.ctx.bot.db.add_roles(self.ctx.guild.id,roles)
+        try:
+            await self.ctx.bot.db.add_roles(self.ctx.guild.id,roles)
+        except asyncpg.exceptions.UniqueViolationError:
+            await interaction.followup.send('One of the roles was already added.',ephemeral=True)
+
         self.clear_items()
         self.add_item(self.add)
         self.add_item(self.remove)
