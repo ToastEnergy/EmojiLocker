@@ -21,8 +21,9 @@ class Core(commands.Cog):
         return res
 
     async def cog_check(self, ctx):
-        if(len(ctx.guild.emojis) == 0):
-            raise commands.BadArgument('There are no emojis in this server!')
+        if ctx.guild:
+            if(len(ctx.guild.emojis) == 0):
+                raise commands.BadArgument('There are no emojis in this server!')
         return True
 
     @commands.command()
