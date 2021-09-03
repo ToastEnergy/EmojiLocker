@@ -96,7 +96,7 @@ class EmojiContext(commands.Context):
 
 class EmojiLocker(commands.AutoShardedBot):
     def __init__(self):
-        super().__init__(command_prefix=self.get_custom_prefix)
+        super().__init__(command_prefix=self.get_custom_prefix,case_insensitive=True)
         self.load_extension('jishaku')
         self.allowed_mentions = discord.AllowedMentions(
             everyone=False, replied_user=True, roles=False, users=False
@@ -111,7 +111,7 @@ class EmojiLocker(commands.AutoShardedBot):
             config.prefix+' ', config.prefix)
 
     async def login(self, *args, **kwargs):
-        self.db = database.Database()
+        self.db = database.Database(self)
         await self.db.connect()
         await self.db.populate_cache(self.guilds_cache)
         self.session = aiohttp.ClientSession()

@@ -108,7 +108,9 @@ class Core(commands.Cog):
     @commands.bot_has_permissions(manage_emojis=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.max_concurrency(1, commands.BucketType.user)
-    async def lockall(self, ctx, *, roles):
+    async def lockall(self, ctx, *, roles=None):
+        if not roles:
+            return await ctx.invoke(self.lockall_wizard) 
         roles = roles.split(',')
         persistent = await self.get_persistent_roles(ctx)
         ctx.roles = set([await commands.RoleConverter().convert(ctx, role.strip()) for role in roles]).union(persistent)
@@ -133,8 +135,7 @@ if you select **overwrite** it will be locked only to the roles that you just sp
 
         # Not using commands.Greedy because the parsing ambiguities ruins the overall UX
         if not args:
-            raise commands.MissingRequiredArgument(inspect.Parameter(
-                name='emojis', kind=inspect.Parameter.POSITIONAL_ONLY))
+            return await ctx.invoke(self.wizard) 
         args = args.split("|")
         if len(args) == 1:
             raise commands.MissingRequiredArgument(inspect.Parameter(
@@ -161,8 +162,9 @@ if you select **overwrite** it will be locked only to the roles that you just sp
     @commands.bot_has_permissions(manage_emojis=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.max_concurrency(1, commands.BucketType.user)
-    async def massunlock(self, ctx, *, emojis):
-
+    async def massunlock(self, ctx, *, emojis=None):
+        if not emojis:
+            return await ctx.invoke(self.unlock_wizard) 
         emojis = emojis.split(",")
         ctx.emojis = list(filter(lambda e: (len(e.roles) > 0),
                                  set([await commands.EmojiConverter().convert(ctx, emoji.strip()) for emoji in emojis])))
@@ -227,14 +229,30 @@ if you select **overwrite** it will be locked only to the roles that you just sp
         ctx.sent_message = await ctx.reply_embed(embed=ctx.embed, view=view)
         if view:
             await view.wait()
-
-    @massunlock.command(name='select')
+            
+    @commands.group(invoke_without_command=True,aliases=['select'])
     @commands.guild_only()
     @commands.has_guild_permissions(manage_emojis=True)
     @commands.bot_has_permissions(manage_emojis=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.max_concurrency(1, commands.BucketType.user)
-    async def massunlock_select(self, ctx):
+    async def wizard(self, ctx):
+        ctx.embed = discord.Embed(title="Guided locking",
+                              description="Select the emojis you want to lock with the menu below, then click continue")
+        ctx.persistent = set(await self.get_persistent_roles(ctx))
+        ctx.roles = set()
+        ctx.emojis = set()
+        view = views.MultipleSelectView(ctx)
+        await ctx.reply_embed(embed=ctx.embed, view=view)
+        await view.wait()
+
+    @wizard.command(name='unlock')
+    @commands.guild_only()
+    @commands.has_guild_permissions(manage_emojis=True)
+    @commands.bot_has_permissions(manage_emojis=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    @commands.max_concurrency(1, commands.BucketType.user)
+    async def unlock_wizard(self, ctx):
         ctx.roles = []
         ctx.emojis = set()
         ctx.locked = [emoji for emoji in ctx.guild.emojis if len(emoji.roles) > 0]
@@ -246,13 +264,13 @@ if you select **overwrite** it will be locked only to the roles that you just sp
         await ctx.reply_embed(embed=embed, view=view)
         await view.wait()
 
-    @lockall.command(name='select')
+    @wizard.command(name='lockall')
     @commands.guild_only()
     @commands.has_guild_permissions(manage_emojis=True)
     @commands.bot_has_permissions(manage_emojis=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.max_concurrency(1, commands.BucketType.user)
-    async def lockall_select(self, ctx):
+    async def lockall_wizard(self, ctx):
         embed = discord.Embed(title="Locking all emojis!",
                               description="You are locking every emoji of the server to some roles, select them with the menu below, then click continue")
         ctx.persistent = set(await self.get_persistent_roles(ctx))
@@ -261,21 +279,7 @@ if you select **overwrite** it will be locked only to the roles that you just sp
         await ctx.reply_embed(embed=embed, view=view)
         await view.wait()
 
-    @multiple.command(name='select')
-    @commands.guild_only()
-    @commands.has_guild_permissions(manage_emojis=True)
-    @commands.bot_has_permissions(manage_emojis=True)
-    @commands.cooldown(1, 5, commands.BucketType.user)
-    @commands.max_concurrency(1, commands.BucketType.user)
-    async def multiple_select(self, ctx):
-        ctx.embed = discord.Embed(title="Guided locking",
-                              description="Select the emojis you want to lock with the menu below, then click continue")
-        ctx.persistent = set(await self.get_persistent_roles(ctx))
-        ctx.roles = set()
-        ctx.emojis = set()
-        view = views.MultipleSelectView(ctx)
-        await ctx.reply_embed(embed=ctx.embed, view=view)
-        await view.wait()
+
 
 def setup(bot):
     bot.add_cog(Core(bot))

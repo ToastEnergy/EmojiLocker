@@ -56,12 +56,16 @@ class LockallView(OwnView):
 
     @discord.ui.button(label='Keep', style=discord.ButtonStyle.green)
     async def keep(self, button, interaction):
+        if len(self.ctx.roles) == 0:
+            return await interaction.response.send_message('Select at least one role',ephemeral=True)
         await interaction.response.defer()
         message = await interaction.original_message()
         await self.do_lockall(False, message)
 
     @discord.ui.button(label='Overwrite', style=discord.ButtonStyle.blurple)
     async def overwrite(self, button, interaction):
+        if len(self.ctx.roles) == 0:
+            return await interaction.response.send_message('Select at least one role',ephemeral=True)
         await interaction.response.defer()
         message = await interaction.original_message()
         await self.do_lockall(True, message)
@@ -166,7 +170,8 @@ class PacksView(OwnView):
 
 
 class RoleSelectMenu(discord.ui.Select):
-    def __init__(self, ctx, roles):
+    def __init__(self, ctx, roles, handle_persistent=True):
+        self.handle_persistent = handle_persistent
         self.ctx = ctx
         options = []
         for role in roles:
@@ -182,7 +187,8 @@ class RoleSelectMenu(discord.ui.Select):
         self.ctx.roles.clear()
         for _set in self.view._roles.values():
             self.ctx.roles = self.ctx.roles.union(_set)
-        self.ctx.roles = self.ctx.roles.union(self.ctx.persistent)
+        if self.handle_persistent:
+            self.ctx.roles = self.ctx.roles.union(self.ctx.persistent)
 
 
 class EmojiSelectMenu(discord.ui.Select):
@@ -281,3 +287,83 @@ class MultipleSelectView(BaseView):
                                           description=f'''🔓 I have succesfully locked {len(self.ctx.emojis)} emojis.\n
 ℹ️ Now only the people with at least one of the roles that you specified ({','.join([r.mention for r in self.ctx.roles])}) will be able to use the emojis''').set_footer(
             text='If you can\'t use the emojis try to fully restart your Discord app')
+
+
+
+class RolesView(OwnView):
+    def __init__(self, ctx):
+        self._roles = {}
+        super().__init__(ctx)
+
+    def add_selects(self, roles):
+        for i in range(0, len(roles), 25):
+            s = RoleSelectMenu(self.ctx, roles[i:i + 25],False)
+            self.add_item(s)
+            self._roles[s] = set()
+
+    @discord.ui.button(label='Add', style=discord.ButtonStyle.green)
+    async def add(self, button, interaction):
+        self.ctx.embed.description = 'You are adding some persistent roles, select them with the menu below then click continue'
+        self.ctx.roles = set()
+        self.remove_item(button)
+        self.remove_item(self.remove)
+        if not self.ctx.data:
+            alr_added = set()
+        else:
+            alr_added = set(map(lambda r : self.ctx.guild.get_role(r), self.ctx.data.get('roles')))
+        self.add_selects(list(set(self.ctx.guild.roles[1:])-alr_added))
+        cont = discord.ui.Button(style=discord.ButtonStyle.green, label='Continue')
+        cont.callback = self.add_roles
+        self.add_item(cont)
+        await interaction.response.edit_message(view=self,embed=self.ctx.embed)
+
+
+    async def add_roles(self, interaction : discord.Interaction):
+        await interaction.response.defer()
+        roles = map(lambda r: r.id, self.ctx.roles)
+        await self.ctx.bot.db.add_roles(self.ctx.guild.id,roles)
+        self.clear_items()
+        self.add_item(self.add)
+        self.add_item(self.remove)
+        self.add_item(self.cancel)
+        self.ctx.data = await self.ctx.bot.db.get_guild(self.ctx.guild.id)
+        if len(self.ctx.data.get('roles')) == 0:
+            self.ctx.embed.description = "There are no persistent roles for this server"
+        else:
+            self.ctx.embed.description = f"The persistent roles for this server are {', '.join(map(lambda r : f'<@&{r}>' ,self.ctx.data.get('roles')))}"
+        await interaction.followup.edit_message(message_id=interaction.message.id, view=self, embed=self.ctx.embed)
+
+    async def remove_roles(self, interaction : discord.Interaction):
+        await interaction.response.defer()
+        roles = list(map(lambda r: r.id, self.ctx.roles))
+        await self.ctx.bot.db.delete_roles(roles)
+        self.clear_items()
+        self.add_item(self.add)
+        self.add_item(self.remove)
+        self.add_item(self.cancel)
+        self.ctx.data = await self.ctx.bot.db.get_guild(self.ctx.guild.id)
+        if len(self.ctx.data.get('roles')) == 0:
+            self.ctx.embed.description = "There are no persistent roles for this server"
+        else:
+            self.ctx.embed.description = f"The persistent roles for this server are {', '.join(map(lambda r : f'<@&{r}>' ,self.ctx.data.get('roles')))}"
+        await interaction.followup.edit_message(message_id=interaction.message.id, view=self, embed=self.ctx.embed)
+
+
+    @discord.ui.button(label='Remove', style=discord.ButtonStyle.blurple)
+    async def remove(self, button, interaction):
+        self.ctx.embed.description = 'You are removing some persistent roles, select them with the menu below then click continue'
+        self.ctx.roles = set()
+        self.remove_item(button)
+        self.remove_item(self.add)
+        if not self.ctx.data or len(self.ctx.data.get('roles'))==0:
+            return await interaction.response.send_message('No roles to remove!',ephemeral=True)
+        self.add_selects(list((map(lambda r : self.ctx.guild.get_role(r), self.ctx.data.get('roles')))))
+        cont = discord.ui.Button(style=discord.ButtonStyle.green, label='Continue')
+        cont.callback = self.remove_roles
+        self.add_item(cont)
+        await interaction.response.edit_message(view=self,embed=self.ctx.embed)
+
+    @discord.ui.button(label='Cancel', style=discord.ButtonStyle.red)
+    async def cancel(self, button, interaction):
+        await interaction.response.edit_message(content='Cancelled.', embed=None, view=None)
+        self.stop()    
