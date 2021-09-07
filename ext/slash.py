@@ -97,7 +97,8 @@ class SlashCommands(commands.Cog):
     @slashcommand(name='packs',guild_id=609363464170897437,description='View the server\'s emoji packs')
     async def packs_slash(self, ctx):
         await self.bot.get_command('packs').__call__(ctx)
-
+        
+    @commands.has_guild_permissions(manage_emojis=True)
     @slashcommand(name='unlock',guild_id=609363464170897437,description='Unlocks an emoji')
     async def unlock_slash(self, ctx):
         await self.bot.get_command('wizard unlock').__call__(ctx)
