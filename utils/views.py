@@ -58,7 +58,7 @@ class LockallView(OwnView):
     @discord.ui.button(label='Keep', style=discord.ButtonStyle.green)
     async def keep(self, button, interaction):
         if len(self.ctx.roles) == 0:
-            return await interaction.response.send_message('Select at least one role',ephemeral=True)
+            return await interaction.response.send_message('Select at least one role', ephemeral=True)
         await interaction.response.defer()
         message = await interaction.original_message()
         await self.do_lockall(False, message)
@@ -66,7 +66,7 @@ class LockallView(OwnView):
     @discord.ui.button(label='Overwrite', style=discord.ButtonStyle.blurple)
     async def overwrite(self, button, interaction):
         if len(self.ctx.roles) == 0:
-            return await interaction.response.send_message('Select at least one role',ephemeral=True)
+            return await interaction.response.send_message('Select at least one role', ephemeral=True)
         await interaction.response.defer()
         message = await interaction.original_message()
         await self.do_lockall(True, message)
@@ -222,7 +222,6 @@ class LockAllSelectView(LockallView):
             self._roles[s] = set()
 
 
-
 class MassUnlockSelectView(BaseView):
     def __init__(self, ctx):
         self._emojis = {}
@@ -233,19 +232,20 @@ class MassUnlockSelectView(BaseView):
             self.add_item(s)
             self._emojis[s] = set()
 
-    async def __continue(self, interaction : discord.Interaction):
+    async def __continue(self, interaction: discord.Interaction):
         if len(self.ctx.emojis) == 0:
-            return await interaction.response.send_message('Select at least one emoji',ephemeral=True)
+            return await interaction.response.send_message('Select at least one emoji', ephemeral=True)
         await interaction.response.defer()
         message = await interaction.original_message()
-        await self.do_bulk(message)  
+        await self.do_bulk(message)
 
     @property
     def confirm_embed(self):
         return discord.Embed(title='Emojis succesfully unlocked', color=discord.Color.green(),
-                                          description=f'''🔓 I have succesfully unlocked {len(self.ctx.emojis)} emojis.\n
+                             description=f'''🔓 I have succesfully unlocked {len(self.ctx.emojis)} emojis.\n
 ℹ️ Now everyone will be able to use all emojis in your server''').set_footer(
             text='If you can\'t use the emojis try to fully restart your Discord app')
+
 
 class MultipleSelectView(BaseView):
     def __init__(self, ctx):
@@ -259,36 +259,34 @@ class MultipleSelectView(BaseView):
             self.add_item(s)
             self._emojis[s] = set()
 
-
-
-
-    async def __continue(self, interaction : discord.Interaction):
+    async def __continue(self, interaction: discord.Interaction):
         if self.step == 0:
             if len(self.ctx.emojis) == 0:
-                return await interaction.response.send_message('Select at least one emoji',ephemeral=True)
+                return await interaction.response.send_message('Select at least one emoji', ephemeral=True)
             self.clear_items()
             self.add_item(self._continue)
             self.add_item(self.cancel)
             for i in range(0, len(self.ctx.guild.roles[1:]), 25):
-                s = RoleSelectMenu(self.ctx, self.ctx.guild.roles[1:][i:i + 25])
+                s = RoleSelectMenu(
+                    self.ctx, self.ctx.guild.roles[1:][i:i + 25])
                 self.add_item(s)
                 self._roles[s] = set()
             self.ctx.embed.description = "Select the roles which will be able to use the selected emojis with the menu below, then click continue"
-            await interaction.response.edit_message(view=self,embed=self.ctx.embed)
+            await interaction.response.edit_message(view=self, embed=self.ctx.embed)
         elif self.step == 1:
             if len(self.ctx.roles) == 0:
-                return await interaction.response.send_message('Select at least one role',ephemeral=True)
+                return await interaction.response.send_message('Select at least one role', ephemeral=True)
             await interaction.response.defer()
             message = await interaction.original_message()
             await self.do_bulk(message)
         self.step += 1
+
     @property
     def confirm_embed(self):
         return discord.Embed(title='Emojis succesfully locked', color=discord.Color.green(),
-                                          description=f'''🔓 I have succesfully locked {len(self.ctx.emojis)} emojis.\n
+                             description=f'''🔓 I have succesfully locked {len(self.ctx.emojis)} emojis.\n
 ℹ️ Now only the people with at least one of the roles that you specified ({','.join([r.mention for r in self.ctx.roles])}) will be able to use the emojis''').set_footer(
             text='If you can\'t use the emojis try to fully restart your Discord app')
-
 
 
 class RolesView(OwnView):
@@ -298,7 +296,7 @@ class RolesView(OwnView):
 
     def add_selects(self, roles):
         for i in range(0, len(roles), 25):
-            s = RoleSelectMenu(self.ctx, roles[i:i + 25],False)
+            s = RoleSelectMenu(self.ctx, roles[i:i + 25], False)
             self.add_item(s)
             self._roles[s] = set()
 
@@ -311,21 +309,22 @@ class RolesView(OwnView):
         if not self.ctx.data:
             alr_added = set()
         else:
-            alr_added = set(map(lambda r : self.ctx.guild.get_role(r), self.ctx.data.get('roles')))
+            alr_added = set(
+                map(lambda r: self.ctx.guild.get_role(r), self.ctx.data.get('roles')))
         self.add_selects(list(set(self.ctx.guild.roles[1:])-alr_added))
-        cont = discord.ui.Button(style=discord.ButtonStyle.green, label='Continue')
+        cont = discord.ui.Button(
+            style=discord.ButtonStyle.green, label='Continue')
         cont.callback = self.add_roles
         self.add_item(cont)
-        await interaction.response.edit_message(view=self,embed=self.ctx.embed)
+        await interaction.response.edit_message(view=self, embed=self.ctx.embed)
 
-
-    async def add_roles(self, interaction : discord.Interaction):
+    async def add_roles(self, interaction: discord.Interaction):
         await interaction.response.defer()
         roles = map(lambda r: r.id, self.ctx.roles)
         try:
-            await self.ctx.bot.db.add_roles(self.ctx.guild.id,roles)
+            await self.ctx.bot.db.add_roles(self.ctx.guild.id, roles)
         except asyncpg.exceptions.UniqueViolationError:
-            await interaction.followup.send('One of the roles was already added.',ephemeral=True)
+            await interaction.followup.send('One of the roles was already added.', ephemeral=True)
 
         self.clear_items()
         self.add_item(self.add)
@@ -338,7 +337,7 @@ class RolesView(OwnView):
             self.ctx.embed.description = f"The persistent roles for this server are {', '.join(map(lambda r : f'<@&{r}>' ,self.ctx.data.get('roles')))}"
         await interaction.followup.edit_message(message_id=interaction.message.id, view=self, embed=self.ctx.embed)
 
-    async def remove_roles(self, interaction : discord.Interaction):
+    async def remove_roles(self, interaction: discord.Interaction):
         await interaction.response.defer()
         roles = list(map(lambda r: r.id, self.ctx.roles))
         await self.ctx.bot.db.delete_roles(roles)
@@ -353,22 +352,23 @@ class RolesView(OwnView):
             self.ctx.embed.description = f"The persistent roles for this server are {', '.join(map(lambda r : f'<@&{r}>' ,self.ctx.data.get('roles')))}"
         await interaction.followup.edit_message(message_id=interaction.message.id, view=self, embed=self.ctx.embed)
 
-
     @discord.ui.button(label='Remove', style=discord.ButtonStyle.blurple)
     async def remove(self, button, interaction):
         self.ctx.embed.description = 'You are removing some persistent roles, select them with the menu below then click continue'
         self.ctx.roles = set()
         self.remove_item(button)
         self.remove_item(self.add)
-        if not self.ctx.data or len(self.ctx.data.get('roles'))==0:
-            return await interaction.response.send_message('No roles to remove!',ephemeral=True)
-        self.add_selects(list((map(lambda r : self.ctx.guild.get_role(r), self.ctx.data.get('roles')))))
-        cont = discord.ui.Button(style=discord.ButtonStyle.green, label='Continue')
+        if not self.ctx.data or len(self.ctx.data.get('roles')) == 0:
+            return await interaction.response.send_message('No roles to remove!', ephemeral=True)
+        self.add_selects(
+            list((map(lambda r: self.ctx.guild.get_role(r), self.ctx.data.get('roles')))))
+        cont = discord.ui.Button(
+            style=discord.ButtonStyle.green, label='Continue')
         cont.callback = self.remove_roles
         self.add_item(cont)
-        await interaction.response.edit_message(view=self,embed=self.ctx.embed)
+        await interaction.response.edit_message(view=self, embed=self.ctx.embed)
 
     @discord.ui.button(label='Cancel', style=discord.ButtonStyle.red)
     async def cancel(self, button, interaction):
         await interaction.response.edit_message(content='Cancelled.', embed=None, view=None)
-        self.stop()    
+        self.stop()

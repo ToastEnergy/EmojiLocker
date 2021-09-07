@@ -40,8 +40,8 @@ ON CONFLICT (guild_id) DO UPDATE SET prefix=$2
 
     async def add_roles(self, guild, roles):
         if guild not in self.bot.guilds_cache:
-            await self.conn.execute("INSERT INTO GUILDS (guild_id) VALUES ($1)",guild)
-            self.bot.guilds_cache[guild] = {'guild_id':guild}
+            await self.conn.execute("INSERT INTO GUILDS (guild_id) VALUES ($1)", guild)
+            self.bot.guilds_cache[guild] = {'guild_id': guild}
         query = '''
 INSERT INTO roles (guild_id, role_id) VALUES  ($1,$2)
 '''
