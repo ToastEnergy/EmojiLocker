@@ -38,10 +38,10 @@ class LockHelp(commands.MinimalHelpCommand):
         embed.add_field(name="Commands", value=commands)
         embed.set_footer(
             text=f"Use {self.context.prefix}help <command> to learn about commands")
-        await self.context.send(embed=embed)
+        await self.context.reply_embed(embed=embed)
 
     async def send_cog_help(self, cog):
-        return await self.context.send("Command not found.")
+        return await self.context.reply_embed("Command not found.")
 
     async def send_command_help(self, command):
         if command.hidden or command.cog_name == "Jishaku":
@@ -55,7 +55,7 @@ class LockHelp(commands.MinimalHelpCommand):
         Category: {command.cog_name}
         ```{command.help}```
         """)
-        await self.context.send(embed=embed)
+        await self.context.reply_embed(embed=embed)
 
     async def send_group_help(self, group):
         if group.hidden:
@@ -70,7 +70,7 @@ class LockHelp(commands.MinimalHelpCommand):
             Category: {command.cog_name}
             ```{command.help}```
             """)
-        await self.context.send(embed=embed)
+        await self.context.reply_embed(embed=embed)
 
 
 class EmojiContext(commands.Context):
@@ -87,8 +87,7 @@ class EmojiContext(commands.Context):
                 og_content += '\n\n'
             except:
                 og_content = ''
-
-            content = f'{og_content}{kwargs.pop("embed").description}{config.no_embeds_message}'
+            content = f'{og_content}{kwargs.pop("embed").description}\n\n{config.no_embeds_message}'
             return await self.send(content, **kwargs)
         else:
             return await self.send(*args, **kwargs)
@@ -96,7 +95,7 @@ class EmojiContext(commands.Context):
 
 class EmojiLocker(commands.AutoShardedBot):
     def __init__(self):
-        super().__init__(command_prefix=self.get_custom_prefix,case_insensitive=True)
+        super().__init__(command_prefix=self.get_custom_prefix, case_insensitive=True)
         self.load_extension('jishaku')
         self.allowed_mentions = discord.AllowedMentions(
             everyone=False, replied_user=True, roles=False, users=False
@@ -105,8 +104,9 @@ class EmojiLocker(commands.AutoShardedBot):
         self.help_command = LockHelp()
         self.guilds_cache = {}
         self.tid = 0
+        self._cd = commands.CooldownMapping.from_cooldown(
+            1, 3, commands.BucketType.user)
         self.tracebacks = {}
-        self.first_ready = True
         self.default_prefix = commands.when_mentioned_or(
             config.prefix+' ', config.prefix)
 
@@ -115,6 +115,10 @@ class EmojiLocker(commands.AutoShardedBot):
         await self.db.connect()
         await self.db.populate_cache(self.guilds_cache)
         self.session = aiohttp.ClientSession()
+        for filename in os.listdir("./ext"):
+            if filename.endswith(".py") and not filename.startswith("_"):
+                self.load_extension(f"ext.{filename[:-3]}")
+                print(f'Loaded {filename}')
         await super().login(*args, **kwargs)
 
     async def close(self, *args, **kwargs):
@@ -126,12 +130,6 @@ class EmojiLocker(commands.AutoShardedBot):
 
     async def on_ready(self):
         print(f'logged in as {self.user}')
-        if self.first_ready:
-            self.first_ready = False
-            for filename in os.listdir("./ext"):
-                if filename.endswith(".py") and not filename.startswith("_"):
-                    self.load_extension(f"ext.{filename[:-3]}")
-                    print(f'Loaded {filename}')
 
     async def get_custom_prefix(self, bot, message):
         if not message.guild:

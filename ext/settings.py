@@ -26,7 +26,6 @@ class Settings(commands.Cog):
         return True
 
     @commands.group(invoke_without_command=True)
-    #@commands.cooldown(1, 5, commands.BucketType.user)
     async def settings(self, ctx):
         data = (await self.bot.db.get_guild(ctx.guild.id)) or {}
         prefix = data.get('prefix')
@@ -53,7 +52,6 @@ Use `{ctx.prefix}settings <setting>` to change a setting
         await ctx.reply_embed(embed=embed)
 
     @settings.command()
-    @commands.cooldown(1, 5, commands.BucketType.user)
     async def prefix(self, ctx, *, prefix=None):
         if not prefix:
             data = await self.bot.db.get_guild(ctx.guild.id)
@@ -71,7 +69,6 @@ Use `{ctx.prefix}settings <setting>` to change a setting
         await ctx.reply('☑')
 
     @settings.group(invoke_without_command=True)
-    @commands.cooldown(1, 5, commands.BucketType.user)
     async def roles(self, ctx):
         ctx.data = await self.bot.db.get_guild(ctx.guild.id)
         if not ctx.data:
@@ -81,14 +78,14 @@ Use `{ctx.prefix}settings <setting>` to change a setting
                 roles = "There are no persistent roles for this server"
             else:
                 roles = f"The persistent roles for this server are {', '.join(map(lambda r : f'<@&{r}>' ,ctx.data.get('roles')))}"
-        ctx.embed = discord.Embed(title=f'{ctx.guild.name}\'s persistent roles')
+        ctx.embed = discord.Embed(
+            title=f'{ctx.guild.name}\'s persistent roles')
         ctx.embed.description = roles
         view = views.RolesView(ctx)
-        await ctx.reply_embed(embed=ctx.embed,view=view)
+        await ctx.reply_embed(embed=ctx.embed, view=view)
         await view.wait()
 
     @roles.command()
-    @commands.cooldown(1, 5, commands.BucketType.user)
     async def add(self, ctx, roles: commands.Greedy[discord.Role]):
         if len(roles) == 0:
             raise commands.MissingRequiredArgument(inspect.Parameter(
@@ -101,7 +98,6 @@ Use `{ctx.prefix}settings <setting>` to change a setting
         await ctx.reply('☑')
 
     @roles.command()
-    @commands.cooldown(1, 5, commands.BucketType.user)
     async def delete(self, ctx, roles: commands.Greedy[discord.Role]):
         if len(roles) == 0:
             raise commands.MissingRequiredArgument(inspect.Parameter(

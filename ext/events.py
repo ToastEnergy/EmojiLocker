@@ -25,6 +25,15 @@ class ErrorHandler(commands.Cog):
         self.commands_webhook = discord.Webhook.from_url(
             config.commands_webhook, session=bot.session)
 
+    async def bot_check(self, ctx):
+        if not ctx.author.id in self.bot.owner_ids:
+            bucket = self.bot._cd.get_bucket(ctx.message)
+            retry_after = bucket.update_rate_limit()
+            if retry_after:
+                raise commands.CommandOnCooldown(
+                    bucket, retry_after, type=commands.BucketType.user)
+        return True
+
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
