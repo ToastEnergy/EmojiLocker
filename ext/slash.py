@@ -1,9 +1,29 @@
 import discord
 from discord.ext import commands
+from utils import views
 
 # this probably sucks but I tried
 
 slash_commands = {}
+
+class FakeMessage(discord.Message):
+    def __init__(self, channel):
+        self.id = 0
+        self.content = 'Slash command'
+        self.channel = channel
+class InteractionContext:
+    def __init__(self, command, interaction):
+        self.command = command
+        self.interaction = interaction
+        self.author = interaction.user
+        self.guild = interaction.guild
+        self.channel = self.guild.get_channel(interaction.channel_id)
+        self.bot = command.bot
+        self.reply_embed = self.send_message
+        self.message = FakeMessage(self.channel)
+
+    async def send_message(self, *args, **kwargs):
+        await self.interaction.followup.send(*args, **kwargs)
 
 
 def slashcommand(**kwargs):
@@ -47,20 +67,40 @@ class SlashCommands(commands.Cog):
     async def on_ready(self):
         if not self.already_registered:
             for command in slash_commands.values():
+                command.bot = self.bot
                 await command.register(self.bot)
             self.already_registered = True
 
-    @slashcommand(description='gg')
-    async def lock(self, interaction):
-        await interaction.response.send_message('gg')
 
     @commands.Cog.listener()
     async def on_interaction(self, interaction):
         if interaction.type == discord.InteractionType.application_command:
             command = slash_commands.get(interaction.data['name'])
             if command:
-                await command.callback(self, interaction)
+                try:
+                    ctx = InteractionContext(command, interaction)
+                    self.bot.dispatch('command', ctx)
+                    await interaction.response.defer()
+                    if hasattr(command,'__commands_checks__'):
+                            await discord.utils.async_all(check(ctx) for check in command.__commands_checks__)
+                    await command.callback(self, ctx)
+                except Exception as error:
+                    self.bot.dispatch('command_error',ctx, error)
+                else:
+                    self.bot.dispatch('command_completion', ctx)
+    @commands.has_guild_permissions(manage_emojis=True)
+    @slashcommand(name='lock',guild_id=609363464170897437,description='Locks an emoji')
+    async def lock_slash(self, ctx):
+        await self.bot.get_command('wizard').__call__(ctx)
 
+
+    @slashcommand(name='packs',guild_id=609363464170897437,description='View the server\'s emoji packs')
+    async def packs_slash(self, ctx):
+        await self.bot.get_command('packs').__call__(ctx)
+
+    @slashcommand(name='unlock',guild_id=609363464170897437,description='Unlocks an emoji')
+    async def unlock_slash(self, ctx):
+        await self.bot.get_command('wizard unlock').__call__(ctx)
 
 def setup(bot):
     bot.add_cog(SlashCommands(bot))

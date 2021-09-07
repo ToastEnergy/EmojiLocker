@@ -206,10 +206,13 @@ if you select **overwrite** it will be locked only to the roles that you just sp
                 ctx.paginator.add_line(f"{em} ")
         ctx.embed.description = ctx.paginator.pages[0]
         ctx.embed.set_footer(text=f'Page 1/{len(ctx.paginator.pages)}')
-        view = views.PacksView(ctx) if len(ctx.paginator.pages) > 1 else None
-        ctx.sent_message = await ctx.reply_embed(embed=ctx.embed, view=view)
-        if view:
-            await view.wait()
+        view = views.PacksView(ctx)
+        if len(ctx.paginator.pages) > 1:
+            ctx.sent_message = await ctx.reply_embed(embed=ctx.embed,view=view)
+            return await view.wait()
+        else:
+            ctx.sent_message = await ctx.reply_embed(embed=ctx.embed)
+
 
     @commands.group(invoke_without_command=True, aliases=['select'])
     @commands.max_concurrency(1, commands.BucketType.user)
@@ -248,6 +251,7 @@ if you select **overwrite** it will be locked only to the roles that you just sp
         view = views.LockAllSelectView(ctx)
         await ctx.reply_embed(embed=embed, view=view)
         await view.wait()
+
 
 
 def setup(bot):
