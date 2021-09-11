@@ -27,6 +27,7 @@ class Settings(commands.Cog):
 
     @commands.group(invoke_without_command=True)
     async def settings(self, ctx):
+        """View the server settings"""
         data = (await self.bot.db.get_guild(ctx.guild.id)) or {}
         prefix = data.get('prefix')
         if not data:
@@ -37,7 +38,7 @@ class Settings(commands.Cog):
             roles = ', '.join(
                 map(lambda r: f'<@&{r}>', data.get('roles'))) or 'No roles'
         embed = discord.Embed(title='Emoji Locker\'s settings',
-                              colour=discord.Colour.green(),
+                              color=config.color,
                               description=f'''**Available settings**
 - `prefix` (the bot's prefix)
 - `roles` (the default roles that will be always included when you lock an emoji, useful for allowing emoji access to server admins)
@@ -53,6 +54,7 @@ Use `{ctx.prefix}settings <setting>` to change a setting
 
     @settings.command()
     async def prefix(self, ctx, *, prefix=None):
+        """Change the bot's prefix"""
         if not prefix:
             data = await self.bot.db.get_guild(ctx.guild.id)
             if not data:
@@ -70,6 +72,8 @@ Use `{ctx.prefix}settings <setting>` to change a setting
 
     @settings.group(invoke_without_command=True)
     async def roles(self, ctx):
+        """Change the server's persistent roles. Persistent roles are roles applied in every emoji lock operation
+        Useful to keep roles like admin always able to use emojis"""
         ctx.data = await self.bot.db.get_guild(ctx.guild.id)
         if not ctx.data:
             roles = "There are no persistent roles for this server"
@@ -87,6 +91,7 @@ Use `{ctx.prefix}settings <setting>` to change a setting
 
     @roles.command()
     async def add(self, ctx, roles: commands.Greedy[discord.Role]):
+        """Add a persistent role to the server's settings"""
         if len(roles) == 0:
             raise commands.MissingRequiredArgument(inspect.Parameter(
                 name='roles', kind=inspect.Parameter.POSITIONAL_ONLY))
@@ -99,6 +104,7 @@ Use `{ctx.prefix}settings <setting>` to change a setting
 
     @roles.command()
     async def delete(self, ctx, roles: commands.Greedy[discord.Role]):
+        """Remove a persistent role to the server's settings"""
         if len(roles) == 0:
             raise commands.MissingRequiredArgument(inspect.Parameter(
                 name='roles', kind=inspect.Parameter.POSITIONAL_ONLY))

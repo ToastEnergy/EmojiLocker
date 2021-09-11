@@ -61,7 +61,7 @@ class ErrorHandler(commands.Cog):
         emb.add_field(name="Error", value=f"```py\n{str(error)}\n```")
         emb.set_author(name=str(ctx.author),
                        icon_url=str(ctx.author.display_avatar))
-        colour = discord.Color.red()
+        color = discord.Color.red()
         UNKNOWN_ERROR = f'An unhandled error occured, please report this to the developers. Error code : `{self.bot.tid}`'
         self.bot.tracebacks[self.bot.tid] = traceback_
         self.bot.tid += 1
@@ -74,7 +74,7 @@ class ErrorHandler(commands.Cog):
                 description = str(error)
             elif parent_err == None:
                 description = UNKNOWN_ERROR
-                colour = discord.Color.dark_magenta()
+                color = discord.Color.dark_magenta()
 
             else:
                 description = parent_err
@@ -82,10 +82,10 @@ class ErrorHandler(commands.Cog):
             description = base_error
         description = description.format(**error.__dict__)
         ctx.embed = discord.Embed(
-            title="Something went wrong.", colour=colour, description=description)
+            title="Something went wrong.", color=color, description=description)
         ctx.embed.set_author(name=str(ctx.author),
                              icon_url=str(ctx.author.display_avatar))
-        emb.colour = colour
+        emb.color = color
         await self.webhook.send(f'Traceback ID : {self.bot.tid}', embed=emb)
         ctx.sent_message = await ctx.reply_embed(embed=ctx.embed, view=views.SupportView(ctx))
 
@@ -98,13 +98,13 @@ class ErrorHandler(commands.Cog):
             paginator.add_line(x)
         for x in paginator.pages:
             embed = discord.Embed(
-                title="Traceback inspector", colour=discord.Color.red(), description=x)
+                title="Traceback inspector", color=discord.Color.red(), description=x)
             await ctx.reply_embed(embed=embed)
 
     @commands.Cog.listener()
     async def on_command(self, ctx):
         time = round(datetime.timestamp(datetime.now()))
-        emb = discord.Embed(colour=discord.Color.green())
+        emb = discord.Embed(color=discord.Color.green())
         emb.add_field(
             name="Message", value=f"`{ctx.message.content}` (`{ctx.message.id}`)", inline=False)
         emb.add_field(

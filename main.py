@@ -5,72 +5,33 @@ import discord
 from discord.ext import commands
 
 import config
-from utils import database
+from utils import database, views
 
 os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
 os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
 os.environ["JISHAKU_HIDE"] = "True"
 
 DESCRIPTION = '''
-What's Emoji Locker?
-Emoji Locker can block emojis to only some roles, you can use it like to give exclusive emojis to the most ranked person or maybe in server's economy!
-If you need any help join the support server https://discord.gg/TaJubW7
-Privacy Policy : https://bit.ly/2ZLoLG1
+This bot can whitelist the usage of **custom emojis** to server roles, making them **disappear** from the emoji picker!
+This can be really useful in **server economy**, rewards etc
+
+If you need any help join the [**support server**](https://discord.gg/TaJubW7)
+[**Privacy Policy**](https://bit.ly/2ZLoLG1)
+[**FAQ**](https://godo)
 '''
 
 
-class LockHelp(commands.MinimalHelpCommand):
+class LockHelp(commands.HelpCommand):
     async def send_bot_help(self, mapping):
-        embed = discord.Embed(title="Emoji Locker", colour=discord.Colour.green(
-        ), description=self.context.bot.description)
+        embed = discord.Embed(title='Emoji Locker help',
+                              description=self.context.bot.description, color=config.color)
+        embed.add_field(name='How to use the bot?', value='''You can use the bot via **/slash** commands, **regular** commands, or **guided** commands.
+Use the **select** menu below to learn more''')
         embed.set_thumbnail(url=str(self.context.bot.user.avatar))
-        commands = str()
-        for x in [x for x in [self.context.bot.get_cog(c) for c in self.context.bot.cogs]]:
-            commands_obj = [c for c in x.get_commands() if not c.hidden]
-            if not (x.qualified_name == "Jishaku") and len(commands_obj) > 0:
-                commands += f"\n__Category: **{x.qualified_name}**__\n"
-                cog_c = str()
-                for command in commands_obj:
-                    if command.hidden:
-                        continue
-                    cog_c += f"`{self.context.prefix}{command.name}`, "
-                commands += cog_c[:-2]
-        embed.add_field(name="Commands", value=commands)
-        embed.set_footer(
-            text=f"Use {self.context.prefix}help <command> to learn about commands")
-        await self.context.reply_embed(embed=embed)
-
-    async def send_cog_help(self, cog):
-        return await self.context.reply_embed("Command not found.")
-
-    async def send_command_help(self, command):
-        if command.hidden or command.cog_name == "Jishaku":
-            return await self.context.send("Command not found.")
-        embed = discord.Embed(title=f"Command help",
-                              colour=discord.Colour.green())
-        embed.set_thumbnail(url=str(self.context.bot.user.avatar))
-        embed.add_field(name=command.name, value=f"""
-        Usage: {self.get_command_signature(command)}
-        Aliases: {", ".join([a for a in command.aliases]) or "None"}
-        Category: {command.cog_name}
-        ```{command.help}```
-        """)
-        await self.context.reply_embed(embed=embed)
-
-    async def send_group_help(self, group):
-        if group.hidden:
-            return await self.context.send("Command not found.")
-        embed = discord.Embed(title=f"Command group help",
-                              colour=discord.Colour.green(), description=group.help)
-        embed.set_thumbnail(url=str(self.context.bot.user.avatar))
-        for command in group.commands:
-            embed.add_field(name=command.name, value=f"""
-            Usage: {self.get_command_signature(command)}
-            Aliases: {", ".join([a for a in command.aliases]) or "None"}
-            Category: {command.cog_name}
-            ```{command.help}```
-            """)
-        await self.context.reply_embed(embed=embed)
+        embed.set_footer(text="Made with ♥ by Toast Energy")
+        view = views.OwnView(self.context)
+        view.add_item(views.HelpSelect(self, help))
+        await self.context.reply_embed(embed=embed,view=view)
 
 
 class EmojiContext(commands.Context):
@@ -142,6 +103,15 @@ class EmojiLocker(commands.AutoShardedBot):
             return self.default_prefix(bot, message)
         else:
             return commands.when_mentioned_or(data.get('prefix')+' ', data.get('prefix'))(bot, message)
+
+    async def get_persistent_roles(self, ctx):
+        data = await self.db.get_roles(ctx.guild.id)
+        res = list()
+        for role in data:
+            role = ctx.guild.get_role(role['role_id'])
+            if role:
+                res.append(role)
+        return res
 
 
 bot = EmojiLocker()

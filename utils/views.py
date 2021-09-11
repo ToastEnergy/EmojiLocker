@@ -91,7 +91,7 @@ class LockallView(OwnView):
                     pass
                 i += 1
                 await message.edit(content=f'{i}/{len(self.ctx.guild.emojis)}')
-            embed = discord.Embed(title='Emojis succesfully locked', color=discord.Color.green(),
+            embed = discord.Embed(title='Emojis succesfully locked', color=config.color,
                                   description=f'''🔒 I have succesfully locked all of your server emojis.\n
     ℹ️ Now only the people with at least one of the roles that you specified ({','.join([r.mention for r in self.ctx.roles])}) will be able to use the emojis''')
             embed.set_footer(
@@ -241,7 +241,7 @@ class MassUnlockSelectView(BaseView):
 
     @property
     def confirm_embed(self):
-        return discord.Embed(title='Emojis succesfully unlocked', color=discord.Color.green(),
+        return discord.Embed(title='Emojis succesfully unlocked', color=config.color,
                              description=f'''🔓 I have succesfully unlocked {len(self.ctx.emojis)} emojis.\n
 ℹ️ Now everyone will be able to use all emojis in your server''').set_footer(
             text='If you can\'t use the emojis try to fully restart your Discord app')
@@ -283,7 +283,7 @@ class MultipleSelectView(BaseView):
 
     @property
     def confirm_embed(self):
-        return discord.Embed(title='Emojis succesfully locked', color=discord.Color.green(),
+        return discord.Embed(title='Emojis succesfully locked', color=config.color,
                              description=f'''🔓 I have succesfully locked {len(self.ctx.emojis)} emojis.\n
 ℹ️ Now only the people with at least one of the roles that you specified ({','.join([r.mention for r in self.ctx.roles])}) will be able to use the emojis''').set_footer(
             text='If you can\'t use the emojis try to fully restart your Discord app')
@@ -372,3 +372,19 @@ class RolesView(OwnView):
     async def cancel(self, button, interaction):
         await interaction.response.edit_message(content='Cancelled.', embed=None, view=None)
         self.stop()
+
+
+class HelpSelect(discord.ui.Select):
+    def __init__(self, help, mapping):
+        super().__init__(placeholder='Select a module', min_values=0, max_values=0)
+        self.display_page = ""
+        self.commands = mapping
+        self.add_options()
+    def get_command_string(self, command):
+        return command.usage
+
+    def add_options(self):
+        for cog in self.commands:
+            self.add_option(
+                discord.SelectOption(label=cog)
+            )

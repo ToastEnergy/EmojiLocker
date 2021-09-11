@@ -1,6 +1,5 @@
 import inspect
-import itertools
-import random
+import config
 
 import discord
 from discord.ext import commands
@@ -10,15 +9,6 @@ from utils import views
 class Core(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    async def get_persistent_roles(self, ctx):
-        data = await self.bot.db.get_roles(ctx.guild.id)
-        res = list()
-        for role in data:
-            role = ctx.guild.get_role(role['role_id'])
-            if role:
-                res.append(role)
-        return res
 
     async def cog_check(self, ctx):
         if not ctx.guild:
@@ -33,17 +23,19 @@ class Core(commands.Cog):
             raise commands.MissingPermissions(['Manage Emojis'])
         return True
 
-    @commands.command()
+    @commands.command(usage="<emoji> <role> <role> ...")
     @commands.max_concurrency(1, commands.BucketType.user)
-    async def lock(self, ctx, emoji: discord.Emoji, *, roles):
-
+    async def lock(self, ctx, emoji: discord.Emoji = None, *, roles=None):
+        """Lock an emoji, making it available only to the roles specified"""
+        if not emoji or not roles:
+            return await self.bot.get_command('wizard').__call__(ctx)
         if emoji.guild != ctx.guild:
             return await ctx.reply('This emoji appears to be from another server')
-        roles = roles.split(',')
-        persistent = await self.get_persistent_roles(ctx)
+        roles = roles.split(' ')
+        persistent = await self.bot.get_persistent_roles(ctx)
 
         # Raises commands.BadArgument if any of the roles are invalid
-        roles = set([await commands.RoleConverter().convert(ctx, role.strip()) for role in roles]).union(persistent)
+        roles = set([await commands.RoleConverter().convert(ctx, role.strip()) for role in roles if role != ""]).union(persistent)
 
         await emoji.edit(name=emoji.name, roles=roles)
 
@@ -52,7 +44,7 @@ class Core(commands.Cog):
 ℹ️ Now only the people with at least one of the roles that you specified ({', '.join([r.mention for r in roles])}) will be able to use the emoji'''
 
         embed = discord.Embed(title='Emoji succesfully locked',
-                              description=description, color=0x2ecc71)
+                              description=description, color=config.color)
         embed.set_footer(
             text="If you can't use the emoji but you have at least one of these roles try to fully restart your Discord app")
         embed.set_thumbnail(url=emoji.url)
@@ -60,7 +52,10 @@ class Core(commands.Cog):
 
     @commands.command()
     @commands.max_concurrency(1, commands.BucketType.user)
-    async def unlock(self, ctx, emoji: discord.Emoji):
+    async def unlock(self, ctx, emoji: discord.Emoji = None):
+        """Unlock an emoji, making it available to everyone"""
+        if not emoji:
+            return await self.bot.get_command('wizard unlock').__call__(ctx)
 
         if emoji.guild != ctx.guild:
             return await ctx.reply('This emoji appears to be from another server')
@@ -74,7 +69,7 @@ class Core(commands.Cog):
             return await ctx.reply(description+'\n\nPlease consider giving me the embed links permissions to see nicer messages')
 
         embed = discord.Embed(title='Emoji succesfully locked',
-                              description=description, color=0x2ecc71)
+                              description=description, color=config.color)
         embed.set_footer(
             text="If you can't use the emoji try to fully restart your Discord app")
         embed.set_thumbnail(url=emoji.url)
@@ -83,6 +78,7 @@ class Core(commands.Cog):
     @commands.command()
     @commands.max_concurrency(1, commands.BucketType.user)
     async def unlockall(self, ctx):
+        """Unlock every emoji in the server, making them available to everyone"""
         ctx.emojis = [
             emoji for emoji in ctx.guild.emojis if len(emoji.roles) > 0]
         ctx.roles = []
@@ -91,50 +87,53 @@ class Core(commands.Cog):
         embed = discord.Embed(title='Unlocking all emojis!',
                               description=f'You are about to unlock {len(ctx.emojis)} emojis, continue?', color=discord.Color.red())
         view = views.BaseView(ctx)
-        view.confirm_embed = discord.Embed(title='Emojis succesfully unlocked', color=discord.Color.green(),
+        view.confirm_embed = discord.Embed(title='Emojis succesfully unlocked', color=config.color,
                                            description=f'''🔓 I have succesfully unlocked all of your server emojis.\n
 ℹ️ Now everyone will be able to use all emojis in your server''').set_footer(
             text='If you can\'t use the emojis try to fully restart your Discord app')
         await ctx.reply_embed(embed=embed, view=view)
         await view.wait()
 
-    @commands.group(usage='<role,role...>', invoke_without_command=True)
+    @commands.group(usage='<role> <role>...', invoke_without_command=True)
     @commands.max_concurrency(1, commands.BucketType.user)
     async def lockall(self, ctx, *, roles=None):
+        """Lock every emoji in the server, making them available to the roles specified"""
         if not roles:
-            return await ctx.invoke(self.lockall_wizard)
+            return await self.bot.get_command('wizard lockall').__call__(ctx)
         roles = roles.split(',')
-        persistent = await self.get_persistent_roles(ctx)
+        persistent = await self.bot.get_persistent_roles(ctx)
         ctx.roles = set([await commands.RoleConverter().convert(ctx, role.strip()) for role in roles]).union(persistent)
         embed = discord.Embed(title='Locking all emojis!', description='''Do you want to **keep** the roles in the existent setup or overwrite them?
 
 If you select **keep** an emoji already locked to @role1  will be locked to @role1 + the roles that you specified in the command
 
 if you select **overwrite** it will be locked only to the roles that you just specified.
-''', color=discord.Color.red())
+''', color=config.color_red)
         view = views.LockallView(ctx)
         await ctx.reply_embed(embed=embed, view=view)
         await view.wait()
 
-    @commands.group(usage='<emoji,emoji...> | <role,role...>', invoke_without_command=True)
+    @commands.group(usage='[<emoji> <emoji>...] , [<role> <role>...]', invoke_without_command=True)
     @commands.max_concurrency(1, commands.BucketType.user)
     # None because hardcoding :tm:
     async def multiple(self, ctx, *, args=None):
-
+        """Locks multiple emojis to the roles specified, making them available to the that roles"""
         # Not using commands.Greedy because the parsing ambiguities ruins the overall UX
         if not args:
-            return await ctx.invoke(self.wizard)
-        args = args.split("|")
+            return await self.bot.get_command('wizard').__call__(ctx)
+        args = args.split(",")
         if len(args) == 1:
             raise commands.MissingRequiredArgument(inspect.Parameter(
                 name='roles', kind=inspect.Parameter.POSITIONAL_ONLY))
-        persistent = await self.get_persistent_roles(ctx)
-        emojis = args[0].split(',')
-        roles = args[1].split(',')
-        ctx.emojis = set([await commands.EmojiConverter().convert(ctx, emoji.strip()) for emoji in emojis]).union(set(persistent))
-        ctx.roles = set([await commands.RoleConverter().convert(ctx, role.strip()) for role in roles])
+
+        emojis = args[0].split(' ')
+        roles = args[1].split(' ')
+        ctx.emojis = set([await commands.EmojiConverter().convert(ctx, emoji.strip()) for emoji in emojis if emoji != ""])
+        ctx.roles = set([await commands.RoleConverter().convert(ctx, role.strip()) for role in roles if role != ""])
+        persistent = await self.bot.get_persistent_roles(ctx)
+        ctx.roles = persistent.union(ctx.roles)
         view = views.BaseView(ctx)
-        view.confirm_embed = discord.Embed(title='Emojis succesfully locked', color=discord.Color.green(),
+        view.confirm_embed = discord.Embed(title='Emojis succesfully locked', color=config.color,
                                            description=f'''🔓 I have succesfully locked {len(ctx.emojis)} emojis\n
 ℹ️ Now only the people with at least one of the roles that you specified ({','.join([r.mention for r in ctx.roles])}) will be able to use the emojis''')
         view.confirm_embed.set_footer(
@@ -144,17 +143,18 @@ if you select **overwrite** it will be locked only to the roles that you just sp
 
         await view.wait()
 
-    @commands.command(usage='<emoji,emoji...>')
+    @commands.command(usage='[<emoji> <emoji>...]')
     @commands.max_concurrency(1, commands.BucketType.user)
     async def massunlock(self, ctx, *, emojis=None):
+        """Unlocks the specified emojis, making them available to everyone"""
         if not emojis:
-            return await ctx.invoke(self.unlock_wizard)
-        emojis = emojis.split(",")
+            return await self.bot.get_command('wizard unlock').__call__(ctx)
+        emojis = emojis.split(" ")
         ctx.emojis = list(filter(lambda e: (len(e.roles) > 0),
-                                 set([await commands.EmojiConverter().convert(ctx, emoji.strip()) for emoji in emojis])))
+                                 set([await commands.EmojiConverter().convert(ctx, emoji.strip()) for emoji in emojis if emoji != ""])))
         ctx.roles = []
         view = views.BaseView(ctx)
-        ctx.confirm_embed = discord.Embed(title='Emojis succesfully unlocked', color=discord.Color.green(),
+        ctx.confirm_embed = discord.Embed(title='Emojis succesfully unlocked', color=config.color,
                                           description=f'''🔓 I have succesfully unlocked {len(ctx.emojis)} emojis\n
 ℹ️ Now everyone will be able to use the emojis''')
         ctx.confirm_embed.set_footer(
@@ -163,95 +163,6 @@ if you select **overwrite** it will be locked only to the roles that you just sp
                               view=view)
 
         await view.wait()
-
-    @commands.command()
-    @commands.guild_only()
-    async def emojiinfo(self, ctx, *, emoji: discord.Emoji):
-        embed = discord.Embed(title=emoji.name)
-        embed.colour = discord.Colour.from_hsv(random.random(), 1, 1)
-        embed.set_thumbnail(url=str(emoji.url))
-        embed.description = f"""
-**Animated?** : {emoji.animated}
-**Roles** : {", ".join([x.mention for x in emoji.roles]) or '@everyone'}
-**Guild** : {emoji.guild.name} [{emoji.guild.id}]
-**ID** : {emoji.id}
-**Available** : {emoji.available}
-**Managed by an integration?** : {emoji.managed}
-**Created at** : {emoji.created_at.strftime("%m/%d/%Y, %H:%M:%S")}
-**Download link** : [Click here]({str(emoji.url)})
-        """
-        await ctx.reply_embed(embed=embed)
-
-    @commands.command()
-    @commands.max_concurrency(3, commands.BucketType.user)
-    async def packs(self, ctx):
-        ctx.packs = []
-        ctx.keys = []
-        def func(x): return x.roles
-        for k, g in itertools.groupby(sorted(ctx.guild.emojis, key=func), func):
-            ctx.packs.append(list(g))
-            ctx.keys.append(k)
-
-        ctx.embed = discord.Embed(
-            title='Packs', colour=discord.Colour.from_hsv(random.random(), 1, 1))
-        ctx.paginator = commands.Paginator(prefix='', suffix='', linesep='')
-        c = 0
-        for x in ctx.packs:
-            ctx.paginator.add_line('\n\n')
-            ctx.paginator.add_line(
-                f"> **{(', '.join([role.name for role in ctx.keys[c]])) or '@everyone'}**")
-            c += 1
-            ctx.paginator.add_line('\n')
-            for em in x:
-                ctx.paginator.add_line(f"{em} ")
-        ctx.embed.description = ctx.paginator.pages[0]
-        ctx.embed.set_footer(text=f'Page 1/{len(ctx.paginator.pages)}')
-        view = views.PacksView(ctx)
-        if len(ctx.paginator.pages) > 1:
-            ctx.sent_message = await ctx.reply_embed(embed=ctx.embed,view=view)
-            return await view.wait()
-        else:
-            ctx.sent_message = await ctx.reply_embed(embed=ctx.embed)
-
-
-    @commands.group(invoke_without_command=True, aliases=['select'])
-    @commands.max_concurrency(1, commands.BucketType.user)
-    async def wizard(self, ctx):
-        ctx.embed = discord.Embed(title="Guided locking",
-                                  description="Select the emojis you want to lock with the menu below, then click continue")
-        ctx.persistent = set(await self.get_persistent_roles(ctx))
-        ctx.roles = set()
-        ctx.emojis = set()
-        view = views.MultipleSelectView(ctx)
-        await ctx.reply_embed(embed=ctx.embed, view=view)
-        await view.wait()
-
-    @wizard.command(name='unlock')
-    @commands.max_concurrency(1, commands.BucketType.user)
-    async def unlock_wizard(self, ctx):
-        ctx.roles = []
-        ctx.emojis = set()
-        ctx.locked = [
-            emoji for emoji in ctx.guild.emojis if len(emoji.roles) > 0]
-        if len(ctx.locked) == 0:
-            raise(commands.BadArgument('There are no locked emojis!'))
-        embed = discord.Embed(title="Unlocking emojis!",
-                              description="Select the emojis you want to unlock with the menu below, then click continue")
-        view = views.MassUnlockSelectView(ctx)
-        await ctx.reply_embed(embed=embed, view=view)
-        await view.wait()
-
-    @wizard.command(name='lockall')
-    @commands.max_concurrency(1, commands.BucketType.user)
-    async def lockall_wizard(self, ctx):
-        embed = discord.Embed(title="Locking all emojis!",
-                              description="You are locking every emoji of the server to some roles, select them with the menu below, then click continue")
-        ctx.persistent = set(await self.get_persistent_roles(ctx))
-        ctx.roles = set()
-        view = views.LockAllSelectView(ctx)
-        await ctx.reply_embed(embed=embed, view=view)
-        await view.wait()
-
 
 
 def setup(bot):
