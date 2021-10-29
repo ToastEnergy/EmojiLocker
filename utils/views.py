@@ -19,6 +19,8 @@ class OwnView(discord.ui.View):
 class BaseView(OwnView):
     def __init__(self, ctx):
         self.ctx = ctx
+        self.successful = 0
+        self.failed = 0
         super().__init__(ctx)
 
     @discord.ui.button(label='Continue', style=discord.ButtonStyle.green)
@@ -36,11 +38,13 @@ class BaseView(OwnView):
         try:
             await message.edit(content='Working...', view=None, embed=None)
             i = 0
+
             for emoji in self.ctx.emojis:
                 try:
                     await emoji.edit(name=emoji.name, roles=self.ctx.roles)
+                    self.successful += 1
                 except:
-                    pass
+                    self.failed += 1
                 i += 1
                 await message.edit(content=f'{i}/{len(self.ctx.emojis)}')
             await message.edit(content=None, embed=self.confirm_embed)
@@ -53,6 +57,8 @@ class BaseView(OwnView):
 class LockallView(OwnView):
     def __init__(self, ctx):
         self.ctx = ctx
+        self.succesfull = 0
+        self.failed = 0
         super().__init__(ctx)
 
     @discord.ui.button(label='Keep', style=discord.ButtonStyle.green)
@@ -88,11 +94,11 @@ class LockallView(OwnView):
                 try:
                     await emoji.edit(name=emoji.name, roles=roles)
                 except:
-                    pass
+                    self.failed += 1
                 i += 1
                 await message.edit(content=f'{i}/{len(self.ctx.guild.emojis)}')
             embed = discord.Embed(title='Emojis succesfully locked', color=config.color,
-                                  description=f'''🔒 I have succesfully locked all of your server emojis.\n
+                                  description=f'''🔒 I have succesfully locked all of your server emojis with {self.failed} failed edits..\n
     ℹ️ Now only the people with at least one of the roles that you specified ({','.join([r.mention for r in self.ctx.roles])}) will be able to use the emojis''')
             embed.set_footer(
                 text='If you can\'t use the emojis but you have at least one of these roles try to fully restart your Discord app')
@@ -148,7 +154,10 @@ class PacksView(OwnView):
     async def on_timeout(self):
         for x in self.children:
             x.disabled = True
-        await self.ctx.sent_message.edit(view=self)
+        try:
+            await self.ctx.sent_message.edit(view=self)
+        except:
+            pass
 
     @discord.ui.button(style=discord.ButtonStyle.blurple, emoji="◀️")
     async def back(self, button, interaction):
@@ -164,7 +173,7 @@ class PacksView(OwnView):
         self.stop()
 
     @discord.ui.button(style=discord.ButtonStyle.blurple, emoji="▶️")
-    async def next(self, button, interaction):
+    async def _next(self, button, interaction):
         self.page += 1
         self.update()
         await interaction.response.edit_message(view=self, embed=self.ctx.embed)
@@ -242,8 +251,8 @@ class MassUnlockSelectView(BaseView):
     @property
     def confirm_embed(self):
         return discord.Embed(title='Emojis succesfully unlocked', color=config.color,
-                             description=f'''🔓 I have succesfully unlocked {len(self.ctx.emojis)} emojis.\n
-ℹ️ Now everyone will be able to use all emojis in your server''').set_footer(
+                             description=f'''🔓 I have succesfully unlocked {self.successful} emojis with {self.failed} failed edits.\n
+ℹ️ Now everyone will be able to use these emojis in your server''').set_footer(
             text='If you can\'t use the emojis try to fully restart your Discord app')
 
 
@@ -284,7 +293,7 @@ class MultipleSelectView(BaseView):
     @property
     def confirm_embed(self):
         return discord.Embed(title='Emojis succesfully locked', color=config.color,
-                             description=f'''🔓 I have succesfully locked {len(self.ctx.emojis)} emojis.\n
+                             description=f'''🔓 I have succesfully locked {self.successful} emojis with {self.failed} failed edits.\n
 ℹ️ Now only the people with at least one of the roles that you specified ({','.join([r.mention for r in self.ctx.roles])}) will be able to use the emojis''').set_footer(
             text='If you can\'t use the emojis try to fully restart your Discord app')
 
@@ -376,15 +385,89 @@ class RolesView(OwnView):
 
 class HelpSelect(discord.ui.Select):
     def __init__(self, help, mapping):
-        super().__init__(placeholder='Select a module', min_values=0, max_values=0)
-        self.display_page = ""
-        self.commands = mapping
-        self.add_options()
-    def get_command_string(self, command):
-        return command.usage
+        options = [
+            discord.SelectOption(
+                label='Basics', description='Learn about basic commands', emoji='🟥', value="0"),
+            discord.SelectOption(
+                label='Advanced syntax', description='Help about advanced syntax', emoji='🟩', value="1"),
+            discord.SelectOption(
+                label='All commands', description='Full commands reference', emoji='🟦', value="2")
+        ]
 
-    def add_options(self):
-        for cog in self.commands:
-            self.add_option(
-                discord.SelectOption(label=cog)
-            )
+        self.embeds = [
+
+            [
+                discord.Embed(title="Basics", description=f"""
+                You can manage your emojis whitelists with 2 basic commands, `lock` and `unlock`
+
+                The **lock** command can add a role to the emoji's whitelist, so only who has at least one of the roles in the whitelist will be able to use emoji.
+
+                just run {help.context.prefix}lock and follow the steps in the gif below.
+                """,color=config.color)
+                .set_image(url="https://i.imgur.com/C2itzck.gif"),
+
+                discord.Embed(title="Basics", description="""You can also use the **non-interactive** version of the **lock** command.
+                
+                As you can see from this gif, the locked emojis completly disappear from the emoji picker if you don't have the required roles.
+                """,color=config.color_red)
+                .set_image(url="https://i.imgur.com/37zjqX7.gif")
+            ],
+            [
+                discord.Embed(title="Advanced", description="""gg""")
+                .set_image(url="https://i.imgur.com/37zjqX7.gif"),
+
+                discord.Embed(title="advanced", description="Non gg")
+            ]
+
+        ]
+        super().__init__(placeholder='Select a tutorial', options=options)
+        self.selected_page = 0
+        self.selected_subpage = 0
+        self.commands = mapping
+
+
+    @property
+    def visualized_page(self):
+        return self.selected_subpage + 1
+
+    def update(self):
+        self.view.children[1].disabled = False
+        self.view.children[2].disabled = False
+        if self.selected_subpage == 0:
+            self.view.children[1].disabled = True
+        if self.selected_subpage == len(self.embeds[self.selected_page])-1:
+            self.view.children[2].disabled = True
+
+        self.embed = self.embeds[self.selected_page][self.selected_subpage]
+        self.embed.set_footer(
+            text=f'Page {self.visualized_page}/{len(self.embeds[self.selected_page])}')
+
+    async def back(self, interaction: discord.Interaction):
+        self.selected_subpage -= 1
+        self.update()
+        await interaction.response.edit_message(embed=self.embed,view=self.view)
+
+    async def _next(self, interaction: discord.Interaction):
+        self.selected_subpage += 1
+        self.update()
+        await interaction.response.edit_message(embed=self.embed,view=self.view)
+        
+    async def callback(self, interaction: discord.Interaction):
+        option = int(interaction.data['values'][0])
+        embeds = self.embeds[option]
+        self.view.clear_items()
+        self.view.add_item(self)
+
+        if len(embeds) > 1:
+            back = discord.ui.Button(
+                style=discord.ButtonStyle.blurple, emoji="◀️")
+            back.callback = self.back
+            _next = discord.ui.Button(
+                style=discord.ButtonStyle.blurple, emoji="▶️")
+            _next.callback = self._next
+            self.view.add_item(back)
+            self.view.add_item(_next)
+        self.selected_page = option
+        self.selected_subpage = 0
+        self.update()
+        await interaction.response.edit_message(embed=self.embed, view=self.view)

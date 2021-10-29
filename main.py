@@ -13,25 +13,26 @@ os.environ["JISHAKU_HIDE"] = "True"
 
 DESCRIPTION = '''
 This bot can whitelist the usage of **custom emojis** to server roles, making them **disappear** from the emoji picker!
-This can be really useful in **server economy**, rewards etc
+This can be really useful in **server economy**, rewards etc...
 
-If you need any help join the [**support server**](https://discord.gg/TaJubW7)
-[**Privacy Policy**](https://bit.ly/2ZLoLG1)
-[**FAQ**](https://godo)
+To learn more, use the **dropdown** below
+
+If you need any help join the **[support server](https://discord.gg/TaJubW7)**
+
+**[Privacy Policy](https://bit.ly/2ZLoLG1)**
+**[FAQ](https://godo)**
 '''
 
 
 class LockHelp(commands.HelpCommand):
     async def send_bot_help(self, mapping):
-        embed = discord.Embed(title='Emoji Locker help',
+        embed = discord.Embed(title='Emoji Locker',
                               description=self.context.bot.description, color=config.color)
-        embed.add_field(name='How to use the bot?', value='''You can use the bot via **/slash** commands, **regular** commands, or **guided** commands.
-Use the **select** menu below to learn more''')
         embed.set_thumbnail(url=str(self.context.bot.user.avatar))
         embed.set_footer(text="Made with ♥ by Toast Energy")
         view = views.OwnView(self.context)
-        view.add_item(views.HelpSelect(self, help))
-        await self.context.reply_embed(embed=embed,view=view)
+        view.add_item(views.HelpSelect(self, mapping))
+        await self.context.reply_embed(embed=embed, view=view)
 
 
 class EmojiContext(commands.Context):

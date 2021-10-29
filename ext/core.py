@@ -23,19 +23,50 @@ class Core(commands.Cog):
             raise commands.MissingPermissions(['Manage Emojis'])
         return True
 
-    @commands.command(usage="<emoji> <role> <role> ...")
+    @commands.group(invoke_without_command=True, usage="<emoji> <role> <role> ...")
     @commands.max_concurrency(1, commands.BucketType.user)
-    async def lock(self, ctx, emoji: discord.Emoji = None, *, roles=None):
-        """Lock an emoji, making it available only to the roles specified"""
-        if not emoji or not roles:
+    async def lock(self, ctx, emoji: discord.Emoji = None, roles: commands.Greedy[discord.Role] = None):
+        """Lock an emoji, making it available only to the roles specified and the persistent roles"""
+        if not emoji:
             return await self.bot.get_command('wizard').__call__(ctx)
+        if not roles:
+            raise commands.MissingRequiredArgument(inspect.Parameter(
+                name='roles', kind=inspect.Parameter.POSITIONAL_ONLY))
         if emoji.guild != ctx.guild:
             return await ctx.reply('This emoji appears to be from another server')
-        roles = roles.split(' ')
         persistent = await self.bot.get_persistent_roles(ctx)
 
         # Raises commands.BadArgument if any of the roles are invalid
-        roles = set([await commands.RoleConverter().convert(ctx, role.strip()) for role in roles if role != ""]).union(persistent)
+        roles = set(roles).union(persistent)
+
+        await emoji.edit(name=emoji.name, roles=roles)
+
+        description = f'''
+🔒 I have succesfully locked the '{emoji.name}' emoji.\n
+ℹ️ Now only the people with at least one of the roles that you specified ({', '.join([r.mention for r in roles])}) will be able to use the emoji'''
+
+        embed = discord.Embed(title='Emoji succesfully locked',
+                              description=description, color=config.color)
+        embed.set_footer(
+            text="If you can't use the emoji but you have at least one of these roles try to fully restart your Discord app")
+        embed.set_thumbnail(url=emoji.url)
+        await ctx.reply_embed(embed=embed)
+
+    @lock.command(usage="<emoji> <role> <role> ...")
+    @commands.max_concurrency(1, commands.BucketType.user)
+    async def keep(self, ctx, emoji: discord.Emoji = None, roles: commands.Greedy[discord.Role] = None):
+        """Lock an emoji, making it available only to the roles specified"""
+        if not emoji:
+            return await self.bot.get_command('wizard').__call__(ctx)
+        if not roles:
+            raise commands.MissingRequiredArgument(inspect.Parameter(
+                name='roles', kind=inspect.Parameter.POSITIONAL_ONLY))
+        if emoji.guild != ctx.guild:
+            return await ctx.reply('This emoji appears to be from another server')
+        persistent = await self.bot.get_persistent_roles(ctx)
+
+        # Raises commands.BadArgument if any of the roles are invalid
+        roles = set(roles).union(persistent).union(emoji.roles)
 
         await emoji.edit(name=emoji.name, roles=roles)
 
@@ -96,13 +127,13 @@ class Core(commands.Cog):
 
     @commands.group(usage='<role> <role>...', invoke_without_command=True)
     @commands.max_concurrency(1, commands.BucketType.user)
-    async def lockall(self, ctx, *, roles=None):
+    async def lockall(self, ctx, *, roles: commands.Greedy[discord.Role] = None):
         """Lock every emoji in the server, making them available to the roles specified"""
-        if not roles:
+        if roles == None:
             return await self.bot.get_command('wizard lockall').__call__(ctx)
-        roles = roles.split(',')
+
         persistent = await self.bot.get_persistent_roles(ctx)
-        ctx.roles = set([await commands.RoleConverter().convert(ctx, role.strip()) for role in roles]).union(persistent)
+        ctx.roles = set([await commands.RoleConverter().convert(ctx, role.strip()) for role in roles if role != ""]).union(persistent)
         embed = discord.Embed(title='Locking all emojis!', description='''Do you want to **keep** the roles in the existent setup or overwrite them?
 
 If you select **keep** an emoji already locked to @role1  will be locked to @role1 + the roles that you specified in the command
