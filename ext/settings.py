@@ -25,7 +25,7 @@ class Settings(commands.Cog):
             raise commands.MissingPermissions(['Manage server'])
         return True
 
-    @commands.group(invoke_without_command=True)
+    @commands.group(invoke_without_command=True,aliases=['setting'])
     async def settings(self, ctx):
         """View the server settings"""
         data = (await self.bot.db.get_guild(ctx.guild.id)) or {}
@@ -70,7 +70,7 @@ Use `{ctx.prefix}settings <setting>` to change a setting
         self.update_cache_key(ctx.guild.id, 'prefix', prefix)
         await ctx.reply('☑')
 
-    @settings.group(invoke_without_command=True)
+    @settings.group(invoke_without_command=True,aliases=['role','persistent'])
     async def roles(self, ctx):
         """Change the server's persistent roles. Persistent roles are roles applied in every emoji lock operation
         Useful to keep roles like admin always able to use emojis"""
@@ -109,6 +109,20 @@ Use `{ctx.prefix}settings <setting>` to change a setting
         await self.bot.db.delete_roles(roles)
         await ctx.reply('☑')
 
-
+    @roles.command(aliases=['refresh'])
+    async def sync(self, ctx):
+        """Lock emojis to newly added persistent roles"""
+        roles = await self.bot.get_persistent_roles(ctx)
+        emojis = [emoji for emoji in ctx.guild.emojis if not set(roles).issubset(emoji.roles)]
+        if not emojis:
+            return await ctx.reply('Nothing to sync.')
+        message = await ctx.reply(f'Updating {len(emojis)} emojis...')
+        for i, emoji in enumerate(emojis):
+            await emoji.edit(roles=set(emoji.roles).union(roles))
+            try:
+                await message.edit(f'{i}/{len(emojis)}')
+            except:
+                pass
+        await message.edit(f'Updated {len(emojis)} emojis.')
 def setup(bot):
     bot.add_cog(Settings(bot))

@@ -435,8 +435,12 @@ You may want to keep every emoji available to some roles, the **persistent roles
 Adding a role to the persistent roles list will automatically lock the emojis you are locking with other commands to the persistent roles.
 
 To set this up, run `{help.context.prefix}settings roles` and follow the instructions in the gif below.
-""",color=config.color).set_image(url="https://i.imgur.com/kavEM0f.gif")
-            ]
+""",color=config.color).set_image(url="https://i.imgur.com/kavEM0f.gif"),
+                discord.Embed(title="Settings help", description=f"""
+If you edit your persistent roles setup you may notice that previously added emojis are not synced with the persistent roles, to fix this just run `{help.context.prefix}settings roles sync`.
+""",color=config.color).set_image(url="https://i.imgur.com/EwySUSi.gif"),
+            ],
+            [discord.Embed(title="Coming soon...")]
 
         ]
         super().__init__(placeholder='Select a tutorial', options=options)
@@ -488,5 +492,8 @@ To set this up, run `{help.context.prefix}settings roles` and follow the instruc
             self.view.add_item(_next)
         self.selected_page = option
         self.selected_subpage = 0
-        self.update()
+        if len(self.embeds[self.selected_page]) > 1:
+            self.update()
+        else:
+            self.embed = self.embeds[self.selected_page][0]
         await interaction.response.edit_message(embed=self.embed, view=self.view)
