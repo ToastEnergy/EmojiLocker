@@ -401,13 +401,13 @@ class HelpSelect(discord.ui.Select):
                 The **lock** command can add a role to the emoji's whitelist, so only who has at least one of the roles in the whitelist will be able to use emoji.
 
                 Just run `{help.context.prefix}lock` and follow the steps in the gif below.
-                """,color=config.color)
+""",color=config.color)
                 .set_image(url="https://i.imgur.com/C2itzck.gif"),
 
                 discord.Embed(title="Basics", description="""You can also use the **non-interactive** version of the **lock** command.
                 
                 As you can see from this gif, the locked emojis completly disappear from the emoji picker if you don't have the required roles.
-                """,color=config.color)
+""",color=config.color)
                 .set_image(url="https://i.imgur.com/37zjqX7.gif"),
                 
                 discord.Embed(title="Basics", description=f"""
@@ -416,21 +416,26 @@ class HelpSelect(discord.ui.Select):
                 The command also have a **non-interactive** version, `{help.context.prefix}unlock <emoji>` (don't actually type <>)
 
                 Its usage is very similare to the lock command, just run `{help.context.prefix}unlock` and follow the steps in the gif below.
-
-
-                """,color=config.color).set_image(url="https://i.imgur.com/AKvKh8b.gif")
+""",color=config.color).set_image(url="https://i.imgur.com/AKvKh8b.gif")
             ],
             [
-                # TODO
-                discord.Embed(title="Settings help", description="""
-You can customize two settings to make it fit your ideal experience, these are:
+                discord.Embed(title="Settings help", description=f"""
+There are two configurable settings, the bot's **prefix** and the **persistent roles**, read the next pages to learn more.
+""",color=config.color),
 
-- Prefix
+                discord.Embed(title="Settings help", description=f"""
+You can change the **prefix** of the bot with `{help.context.prefix}settings prefix <prefix>` (don't type <>)
 
-""")
-                .set_image(url="https://i.imgur.com/37zjqX7.gif"),
+After changing the bot's prefix, you will no longer able to invoke commands using `e!` but with the prefix you just set.
 
-                discord.Embed(title="advanced", description="Non gg")
+If you forget the prefix, you will still be able to use the bot by @mentioning the bot.
+""",color=config.color).set_image(url="https://i.imgur.com/PAoNK7Q.gif"),
+                discord.Embed(title="Settings help", description=f"""
+You may want to keep every emoji available to some roles, the **persistent roles** helps you setting this up. You can use this feature to let admins use every emoji.
+Adding a role to the persistent roles list will automatically lock the emojis you are locking with other commands to the persistent roles.
+
+To set this up, run `{help.context.prefix}settings roles` and follow the instructions in the gif below.
+""",color=config.color).set_image(url="https://i.imgur.com/kavEM0f.gif")
             ]
 
         ]
