@@ -318,8 +318,7 @@ class RolesView(OwnView):
         if not self.ctx.data:
             alr_added = set()
         else:
-            alr_added = set(
-                map(lambda r: self.ctx.guild.get_role(r), self.ctx.data.get('roles')))
+            alr_added = set(self.ctx.data)
         self.add_selects(list(set(self.ctx.guild.roles[1:])-alr_added))
         cont = discord.ui.Button(
             style=discord.ButtonStyle.green, label='Continue')
@@ -339,11 +338,11 @@ class RolesView(OwnView):
         self.add_item(self.add)
         self.add_item(self.remove)
         self.add_item(self.cancel)
-        self.ctx.data = await self.ctx.bot.db.get_guild(self.ctx.guild.id)
-        if len(self.ctx.data.get('roles')) == 0:
+        self.ctx.data = await self.ctx.bot.get_persistent_roles(self.ctx)
+        if not self.ctx.data:
             self.ctx.embed.description = "There are no persistent roles for this server"
         else:
-            self.ctx.embed.description = f"The persistent roles for this server are {', '.join(map(lambda r : f'<@&{r}>' ,self.ctx.data.get('roles')))}"
+            self.ctx.embed.description = f"The persistent roles for this server are {', '.join(map(lambda r : r.mention ,self.ctx.data))}"
         await interaction.followup.edit_message(message_id=interaction.message.id, view=self, embed=self.ctx.embed)
 
     async def remove_roles(self, interaction: discord.Interaction):
@@ -354,11 +353,11 @@ class RolesView(OwnView):
         self.add_item(self.add)
         self.add_item(self.remove)
         self.add_item(self.cancel)
-        self.ctx.data = await self.ctx.bot.db.get_guild(self.ctx.guild.id)
-        if len(self.ctx.data.get('roles')) == 0:
+        self.ctx.data = await self.ctx.bot.get_persistent_roles(self.ctx)
+        if not self.ctx.data:
             self.ctx.embed.description = "There are no persistent roles for this server"
         else:
-            self.ctx.embed.description = f"The persistent roles for this server are {', '.join(map(lambda r : f'<@&{r}>' ,self.ctx.data.get('roles')))}"
+            self.ctx.embed.description = f"The persistent roles for this server are {', '.join(map(lambda r : r.mention ,self.ctx.data))}"
         await interaction.followup.edit_message(message_id=interaction.message.id, view=self, embed=self.ctx.embed)
 
     @discord.ui.button(label='Remove', style=discord.ButtonStyle.blurple)
@@ -367,10 +366,9 @@ class RolesView(OwnView):
         self.ctx.roles = set()
         self.remove_item(button)
         self.remove_item(self.add)
-        if not self.ctx.data or len(self.ctx.data.get('roles')) == 0:
+        if not self.ctx.data:
             return await interaction.response.send_message('No roles to remove!', ephemeral=True)
-        self.add_selects(
-            list((map(lambda r: self.ctx.guild.get_role(r), self.ctx.data.get('roles')))))
+        self.add_selects(self.ctx.data)
         cont = discord.ui.Button(
             style=discord.ButtonStyle.green, label='Continue')
         cont.callback = self.remove_roles
@@ -389,7 +387,7 @@ class HelpSelect(discord.ui.Select):
             discord.SelectOption(
                 label='Basics', description='Learn about basic commands', emoji='🟥', value="0"),
             discord.SelectOption(
-                label='Advanced syntax', description='Help about advanced syntax', emoji='🟩', value="1"),
+                label='Settings', description='Help about the bot\'s settings', emoji='🟩', value="1"),
             discord.SelectOption(
                 label='All commands', description='Full commands reference', emoji='🟦', value="2")
         ]
@@ -402,18 +400,34 @@ class HelpSelect(discord.ui.Select):
 
                 The **lock** command can add a role to the emoji's whitelist, so only who has at least one of the roles in the whitelist will be able to use emoji.
 
-                just run {help.context.prefix}lock and follow the steps in the gif below.
+                Just run `{help.context.prefix}lock` and follow the steps in the gif below.
                 """,color=config.color)
                 .set_image(url="https://i.imgur.com/C2itzck.gif"),
 
                 discord.Embed(title="Basics", description="""You can also use the **non-interactive** version of the **lock** command.
                 
                 As you can see from this gif, the locked emojis completly disappear from the emoji picker if you don't have the required roles.
-                """,color=config.color_red)
-                .set_image(url="https://i.imgur.com/37zjqX7.gif")
+                """,color=config.color)
+                .set_image(url="https://i.imgur.com/37zjqX7.gif"),
+                
+                discord.Embed(title="Basics", description=f"""
+                The **unlock** command disables the whitelist for an emoji, so everyone will be able to use it.
+
+                The command also have a **non-interactive** version, `{help.context.prefix}unlock <emoji>` (don't actually type <>)
+
+                Its usage is very similare to the lock command, just run `{help.context.prefix}unlock` and follow the steps in the gif below.
+
+
+                """,color=config.color).set_image(url="https://i.imgur.com/AKvKh8b.gif")
             ],
             [
-                discord.Embed(title="Advanced", description="""gg""")
+                # TODO
+                discord.Embed(title="Settings help", description="""
+You can customize two settings to make it fit your ideal experience, these are:
+
+- Prefix
+
+""")
                 .set_image(url="https://i.imgur.com/37zjqX7.gif"),
 
                 discord.Embed(title="advanced", description="Non gg")

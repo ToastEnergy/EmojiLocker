@@ -74,14 +74,11 @@ Use `{ctx.prefix}settings <setting>` to change a setting
     async def roles(self, ctx):
         """Change the server's persistent roles. Persistent roles are roles applied in every emoji lock operation
         Useful to keep roles like admin always able to use emojis"""
-        ctx.data = await self.bot.db.get_guild(ctx.guild.id)
+        ctx.data = await self.bot.get_persistent_roles(ctx)
         if not ctx.data:
             roles = "There are no persistent roles for this server"
         else:
-            if not ctx.data.get('roles'):
-                roles = "There are no persistent roles for this server"
-            else:
-                roles = f"The persistent roles for this server are {', '.join(map(lambda r : f'<@&{r}>' ,ctx.data.get('roles')))}"
+            roles = f"The persistent roles for this server are {', '.join(map(lambda r : r.mention ,ctx.data))}"
         ctx.embed = discord.Embed(
             title=f'{ctx.guild.name}\'s persistent roles')
         ctx.embed.description = roles

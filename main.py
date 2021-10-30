@@ -108,10 +108,15 @@ class EmojiLocker(commands.AutoShardedBot):
     async def get_persistent_roles(self, ctx):
         data = await self.db.get_roles(ctx.guild.id)
         res = list()
+        to_remove = list()
         for role in data:
-            role = ctx.guild.get_role(role['role_id'])
-            if role:
-                res.append(role)
+            resolved_role = ctx.guild.get_role(role['role_id'])
+            if resolved_role:
+                res.append(resolved_role)
+            else:
+                to_remove.append(role['role_id'])
+        if to_remove:
+            await self.db.delete_roles(to_remove)
         return res
 
 
