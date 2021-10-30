@@ -67,7 +67,7 @@ class EmojiLocker(commands.AutoShardedBot):
         self.guilds_cache = {}
         self.tid = 0
         self._cd = commands.CooldownMapping.from_cooldown(
-            1, 3, commands.BucketType.user)
+            1, 1.5, commands.BucketType.user)
         self.tracebacks = {}
         self.default_prefix = commands.when_mentioned_or(
             config.prefix+' ', config.prefix)
