@@ -17,7 +17,7 @@ errors = {
 }
 
 
-class ErrorHandler(commands.Cog):
+class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.webhook = discord.Webhook.from_url(
@@ -124,4 +124,4 @@ class ErrorHandler(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(ErrorHandler(bot))
+    bot.add_cog(Events(bot))
