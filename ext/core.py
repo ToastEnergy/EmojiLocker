@@ -24,7 +24,7 @@ class Core(commands.Cog):
         return True
 
     @commands.group(invoke_without_command=True, usage="<emoji> <role> <role> ...")
-    @commands.max_concurrency(1, commands.BucketType.user)
+    @commands.max_concurrency(5, commands.BucketType.user)
     async def lock(self, ctx, emoji: discord.Emoji = None, roles: commands.Greedy[discord.Role] = None):
         """Lock an emoji, making it available only to the roles specified and the persistent roles"""
         if not emoji:
@@ -53,7 +53,7 @@ class Core(commands.Cog):
         await ctx.reply_embed(embed=embed)
 
     @lock.command(usage="<emoji> <role> <role> ...")
-    @commands.max_concurrency(1, commands.BucketType.user)
+    @commands.max_concurrency(5, commands.BucketType.user)
     async def keep(self, ctx, emoji: discord.Emoji = None, roles: commands.Greedy[discord.Role] = None):
         """Lock an emoji, making it available only to the roles specified"""
         if not emoji:
@@ -82,7 +82,7 @@ class Core(commands.Cog):
         await ctx.reply_embed(embed=embed)
 
     @commands.command()
-    @commands.max_concurrency(1, commands.BucketType.user)
+    @commands.max_concurrency(5, commands.BucketType.user)
     async def unlock(self, ctx, emoji: discord.Emoji = None):
         """Unlock an emoji, making it available to everyone"""
         if not emoji:
@@ -107,7 +107,7 @@ class Core(commands.Cog):
         await ctx.reply_embed(embed=embed)
 
     @commands.command()
-    @commands.max_concurrency(1, commands.BucketType.user)
+    @commands.max_concurrency(5, commands.BucketType.user)
     async def unlockall(self, ctx):
         """Unlock every emoji in the server, making them available to everyone"""
         ctx.emojis = [
@@ -126,7 +126,7 @@ class Core(commands.Cog):
         await view.wait()
 
     @commands.group(usage='<role> <role>...', invoke_without_command=True)
-    @commands.max_concurrency(1, commands.BucketType.user)
+    @commands.max_concurrency(5, commands.BucketType.user)
     async def lockall(self, ctx, *, roles: commands.Greedy[discord.Role] = None):
         """Lock every emoji in the server, making them available to the roles specified"""
         if roles == None:
@@ -145,7 +145,7 @@ if you select **overwrite** it will be locked only to the roles that you just sp
         await view.wait()
 
     @commands.group(usage='[<emoji> <emoji>...] , [<role> <role>...]', invoke_without_command=True)
-    @commands.max_concurrency(1, commands.BucketType.user)
+    @commands.max_concurrency(5, commands.BucketType.user)
     # None because hardcoding :tm:
     async def multiple(self, ctx, *, args=None):
         """Locks multiple emojis to the roles specified, making them available to the that roles"""
@@ -175,7 +175,7 @@ if you select **overwrite** it will be locked only to the roles that you just sp
         await view.wait()
 
     @commands.command(usage='[<emoji> <emoji>...]')
-    @commands.max_concurrency(1, commands.BucketType.user)
+    @commands.max_concurrency(5, commands.BucketType.user)
     async def massunlock(self, ctx, *, emojis=None):
         """Unlocks the specified emojis, making them available to everyone"""
         if not emojis:
