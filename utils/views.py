@@ -382,24 +382,22 @@ class HelpSelect(discord.ui.Select):
                 discord.Embed(title="Basics", description=f"""
                 You can manage your emojis whitelists with 2 basic commands, `lock` and `unlock`
 
-                The **lock** command can add a role to the emoji's whitelist, so only who has at least one of the roles in the whitelist will be able to use emoji.
+The **lock** command can add a role to the emoji's whitelist, so only who has at least one of the roles in the whitelist will be able to use emoji.
 
-                Just run `{_help.context.prefix}lock` and follow the steps in the gif below.
-""", color=config.color)
-                    .set_image(url="https://i.imgur.com/C2itzck.gif"),
+Just run `{_help.context.prefix}lock` and follow the steps in the gif below.
+""", color=config.color).set_image(url="https://i.imgur.com/C2itzck.gif"),
 
                 discord.Embed(title="Basics", description="""You can also use the **non-interactive** version of the **lock** command.
                 
-                As you can see from this gif, the locked emojis completly disappear from the emoji picker if you don't have the required roles.
-""", color=config.color)
-                    .set_image(url="https://i.imgur.com/37zjqX7.gif"),
+As you can see from this gif, the locked emojis completely disappear from the emoji picker if you don't have the required roles.
+""", color=config.color).set_image(url="https://i.imgur.com/37zjqX7.gif"),
 
                 discord.Embed(title="Basics", description=f"""
-                The **unlock** command disables the whitelist for an emoji, so everyone will be able to use it.
+The **unlock** command disables the whitelist for an emoji, so everyone will be able to use it.
 
-                The command also have a **non-interactive** version, `{_help.context.prefix}unlock <emoji>` (don't actually type <>)
+The command also have a **non-interactive** version, `{_help.context.prefix}unlock <emoji>` (don't actually type <>)
 
-                Its usage is very similare to the lock command, just run `{_help.context.prefix}unlock` and follow the steps in the gif below.
+Its usage is very similar to the lock command, just run `{_help.context.prefix}unlock` and follow the steps in the gif below.
 """, color=config.color).set_image(url="https://i.imgur.com/AKvKh8b.gif")
             ],
             [
