@@ -35,7 +35,7 @@ class BaseView(OwnView):
         await interaction.response.edit_message(content='Cancelled.', embed=None, view=None)
         self.stop()
 
-    async def do_bulk(self, message, overwrite=True):
+    async def do_bulk(self, message, overwrite=False):
         try:
             await message.edit(content='Working...', view=None, embed=None)
             i = 0
