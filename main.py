@@ -34,7 +34,7 @@ aliases : {",".join(command.aliases) or "No aliases"}
 usage : {command.usage}
 > {command.help or "No help provided"}
 """
-        if isinstance(command,commands.Group):
+        if isinstance(command, commands.Group):
             for x in command.commands:
                 r += f"""
 `{x.parent.name} {x.name}`

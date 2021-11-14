@@ -3,3 +3,4 @@ config.py
 Pipfile
 Pipfile.lock
 .vscode
+.idea

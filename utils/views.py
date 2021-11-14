@@ -18,10 +18,11 @@ class OwnView(discord.ui.View):
 
 class BaseView(OwnView):
     def __init__(self, ctx):
-        self.ctx = ctx
+        super().__init__(ctx)
         self.successful = 0
         self.failed = 0
-        super().__init__(ctx)
+        self.overwrite_button = discord.ui.Button(label='Overwrite', style=discord.ButtonStyle.blurple)
+        self.overwrite_button.callback = self.overwrite
 
     @discord.ui.button(label='Continue', style=discord.ButtonStyle.green)
     async def _continue(self, button, interaction):
@@ -34,14 +35,17 @@ class BaseView(OwnView):
         await interaction.response.edit_message(content='Cancelled.', embed=None, view=None)
         self.stop()
 
-    async def do_bulk(self, message):
+    async def do_bulk(self, message, overwrite=True):
         try:
             await message.edit(content='Working...', view=None, embed=None)
             i = 0
-
             for emoji in self.ctx.emojis:
+                if not overwrite:
+                    roles = set(emoji.roles).union(self.ctx.roles)
+                else:
+                    roles = self.ctx.roles
                 try:
-                    await emoji.edit(name=emoji.name, roles=self.ctx.roles)
+                    await emoji.edit(name=emoji.name, roles=roles)
                     self.successful += 1
                 except:
                     self.failed += 1
@@ -53,66 +57,34 @@ class BaseView(OwnView):
         finally:
             self.stop()
 
+    async def overwrite(self, interaction):
+        if len(self.ctx.roles) == 0:
+            return await interaction.response.send_message('Select at least one role', ephemeral=True)
+        await interaction.response.defer()
+        message = await interaction.original_message()
+        await self.do_bulk(message, True)
 
-class LockallView(OwnView):
+
+class LockallView(BaseView):
     def __init__(self, ctx):
-        self.ctx = ctx
-        self.succesfull = 0
-        self.failed = 0
         super().__init__(ctx)
+        self.children[0].label = "Keep"
+        self.clear_items()
+        self.add_item(self._continue)
+        self.add_item(self.overwrite_button)
+        self.add_item(self.cancel)
+        self.ctx.emojis = ctx.guild.emojis
 
-    @discord.ui.button(label='Keep', style=discord.ButtonStyle.green)
-    async def keep(self, button, interaction):
-        if len(self.ctx.roles) == 0:
-            return await interaction.response.send_message('Select at least one role', ephemeral=True)
-        await interaction.response.defer()
-        message = await interaction.original_message()
-        await self.do_lockall(False, message)
-
-    @discord.ui.button(label='Overwrite', style=discord.ButtonStyle.blurple)
-    async def overwrite(self, button, interaction):
-        if len(self.ctx.roles) == 0:
-            return await interaction.response.send_message('Select at least one role', ephemeral=True)
-        await interaction.response.defer()
-        message = await interaction.original_message()
-        await self.do_lockall(True, message)
-
-    @discord.ui.button(label='Cancel', style=discord.ButtonStyle.red)
-    async def cancel(self, button, interaction):
-        await interaction.response.edit_message(content='Cancelled.', embed=None, view=None)
-        self.stop()
-
-    async def do_lockall(self, overwrwite, message):
-        try:
-            await message.edit(content='Working...', view=None, embed=None)
-            i = 0
-            for emoji in self.ctx.guild.emojis:
-                if not overwrwite:
-                    roles = set(emoji.roles).union(self.ctx.roles)
-                else:
-                    roles = self.ctx.roles
-                try:
-                    await emoji.edit(name=emoji.name, roles=roles)
-                except:
-                    self.failed += 1
-                i += 1
-                await message.edit(content=f'{i}/{len(self.ctx.guild.emojis)}')
-            embed = discord.Embed(title='Emojis succesfully locked', color=config.color,
-                                  description=f'''🔒 I have succesfully locked all of your server emojis with {self.failed} failed edits..\n
-    ℹ️ Now only the people with at least one of the roles that you specified ({','.join([r.mention for r in self.ctx.roles])}) will be able to use the emojis''')
-            embed.set_footer(
-                text='If you can\'t use the emojis but you have at least one of these roles try to fully restart your Discord app')
-            await message.edit(content=None, embed=embed)
-        except Exception as e:
-            raise e
-        finally:
-            self.stop()
+    @property
+    def confirm_embed(self):
+        return discord.Embed(title='Emojis succesfully unlocked', color=config.color,
+                             description=f'''🔓 I have succesfully locked all of your server emojis with {self.failed} failed edits.\n ℹ️ Now only the people with at least one of the roles that you specified ({','.join([r.mention for r in self.ctx.roles])}) will be able to use the emojis''').set_footer(
+            text='If you can\'t use the emojis try to fully restart your Discord app')
 
 
 class SupportView(OwnView):
     def __init__(self, ctx):
         super().__init__(ctx)
-        self.ctx: commands.Context = ctx
         button = discord.ui.Button(
             style=discord.ButtonStyle.url, url=config.support_server, label='Support server')
         self.add_item(button)
@@ -121,14 +93,18 @@ class SupportView(OwnView):
     async def show_help(self, button, interaction):
         self.remove_item(button)
         embed = self.ctx.embed
-        embed.add_field(name='Command help', value=self.ctx.command.signature)
+        command = self.ctx.command
+        embed.add_field(name='Command help', value=f"""`{command.name}`
+aliases : {",".join(command.aliases) or "No aliases"}
+usage : {command.usage}
+> {command.help or "No help provided"}
+""")
         await interaction.response.edit_message(view=self, embed=embed, content=None)
 
 
 class PacksView(OwnView):
     def __init__(self, ctx):
         super().__init__(ctx)
-        self.ctx: commands.Context = ctx
         self.page = 0
         self.total_pages = len(ctx.paginator.pages)
         self.timeout = 60
@@ -223,8 +199,8 @@ class EmojiSelectMenu(discord.ui.Select):
 
 class LockAllSelectView(LockallView):
     def __init__(self, ctx):
-        self._roles = {}
         super().__init__(ctx)
+        self._roles = {}
         for i in range(0, len(ctx.guild.roles[1:]), 25):
             s = RoleSelectMenu(ctx, ctx.guild.roles[1:][i:i + 25])
             self.add_item(s)
@@ -233,8 +209,8 @@ class LockAllSelectView(LockallView):
 
 class MassUnlockSelectView(BaseView):
     def __init__(self, ctx):
-        self._emojis = {}
         super().__init__(ctx)
+        self._emojis = {}
         self.children[0].callback = self.__continue
         for i in range(0, len(ctx.locked), 25):
             s = EmojiSelectMenu(ctx, ctx.locked[i:i + 25])
@@ -258,10 +234,10 @@ class MassUnlockSelectView(BaseView):
 
 class MultipleSelectView(BaseView):
     def __init__(self, ctx):
+        super().__init__(ctx)
         self.step = 0
         self._emojis = {}
         self._roles = {}
-        super().__init__(ctx)
         self.children[0].callback = self.__continue
         for i in range(0, len(ctx.guild.emojis), 25):
             s = EmojiSelectMenu(ctx, ctx.guild.emojis[i:i + 25])
@@ -273,14 +249,22 @@ class MultipleSelectView(BaseView):
             if len(self.ctx.emojis) == 0:
                 return await interaction.response.send_message('Select at least one emoji', ephemeral=True)
             self.clear_items()
+            self._continue.label = "Keep"
             self.add_item(self._continue)
+            self.add_item(self.overwrite_button)
             self.add_item(self.cancel)
             for i in range(0, len(self.ctx.guild.roles[1:]), 25):
                 s = RoleSelectMenu(
                     self.ctx, self.ctx.guild.roles[1:][i:i + 25])
                 self.add_item(s)
                 self._roles[s] = set()
-            self.ctx.embed.description = "Select the roles which will be able to use the selected emojis with the menu below, then click continue"
+            self.ctx.embed.description = """
+Select the roles that will be able to use the selected emojis with the menu below, then click Keep or Overwrite
+
+If you select **keep** an emoji already locked to @role1 will be locked to @role1 + the roles that you specified in the command
+
+if you select **overwrite** it will be locked only to the roles that you just specified.
+"""
             await interaction.response.edit_message(view=self, embed=self.ctx.embed)
         elif self.step == 1:
             if len(self.ctx.roles) == 0:
@@ -319,7 +303,7 @@ class RolesView(OwnView):
             alr_added = set()
         else:
             alr_added = set(self.ctx.data)
-        self.add_selects(list(set(self.ctx.guild.roles[1:])-alr_added))
+        self.add_selects(list(set(self.ctx.guild.roles[1:]) - alr_added))
         cont = discord.ui.Button(
             style=discord.ButtonStyle.green, label='Continue')
         cont.callback = self.add_roles
@@ -342,7 +326,7 @@ class RolesView(OwnView):
         if not self.ctx.data:
             self.ctx.embed.description = "There are no persistent roles for this server"
         else:
-            self.ctx.embed.description = f"The persistent roles for this server are {', '.join(map(lambda r : r.mention ,self.ctx.data))}"
+            self.ctx.embed.description = f"The persistent roles for this server are {', '.join(map(lambda r: r.mention, self.ctx.data))}"
         await interaction.followup.edit_message(message_id=interaction.message.id, view=self, embed=self.ctx.embed)
 
     async def remove_roles(self, interaction: discord.Interaction):
@@ -357,7 +341,7 @@ class RolesView(OwnView):
         if not self.ctx.data:
             self.ctx.embed.description = "There are no persistent roles for this server"
         else:
-            self.ctx.embed.description = f"The persistent roles for this server are {', '.join(map(lambda r : r.mention ,self.ctx.data))}"
+            self.ctx.embed.description = f"The persistent roles for this server are {', '.join(map(lambda r: r.mention, self.ctx.data))}"
         await interaction.followup.edit_message(message_id=interaction.message.id, view=self, embed=self.ctx.embed)
 
     @discord.ui.button(label='Remove', style=discord.ButtonStyle.blurple)
@@ -401,27 +385,27 @@ class HelpSelect(discord.ui.Select):
                 The **lock** command can add a role to the emoji's whitelist, so only who has at least one of the roles in the whitelist will be able to use emoji.
 
                 Just run `{_help.context.prefix}lock` and follow the steps in the gif below.
-""",color=config.color)
-                .set_image(url="https://i.imgur.com/C2itzck.gif"),
+""", color=config.color)
+                    .set_image(url="https://i.imgur.com/C2itzck.gif"),
 
                 discord.Embed(title="Basics", description="""You can also use the **non-interactive** version of the **lock** command.
                 
                 As you can see from this gif, the locked emojis completly disappear from the emoji picker if you don't have the required roles.
-""",color=config.color)
-                .set_image(url="https://i.imgur.com/37zjqX7.gif"),
-                
+""", color=config.color)
+                    .set_image(url="https://i.imgur.com/37zjqX7.gif"),
+
                 discord.Embed(title="Basics", description=f"""
                 The **unlock** command disables the whitelist for an emoji, so everyone will be able to use it.
 
                 The command also have a **non-interactive** version, `{_help.context.prefix}unlock <emoji>` (don't actually type <>)
 
                 Its usage is very similare to the lock command, just run `{_help.context.prefix}unlock` and follow the steps in the gif below.
-""",color=config.color).set_image(url="https://i.imgur.com/AKvKh8b.gif")
+""", color=config.color).set_image(url="https://i.imgur.com/AKvKh8b.gif")
             ],
             [
                 discord.Embed(title="Settings help", description=f"""
 There are two configurable settings, the bot's **prefix** and the **persistent roles**, read the next pages to learn more.
-""",color=config.color),
+""", color=config.color),
 
                 discord.Embed(title="Settings help", description=f"""
 You can change the **prefix** of the bot with `{_help.context.prefix}settings prefix <prefix>` (don't type <>)
@@ -429,25 +413,25 @@ You can change the **prefix** of the bot with `{_help.context.prefix}settings pr
 After changing the bot's prefix, you will no longer able to invoke commands using `e!` but with the prefix you just set.
 
 If you forget the prefix, you will still be able to use the bot by @mentioning the bot.
-""",color=config.color).set_image(url="https://i.imgur.com/PAoNK7Q.gif"),
+""", color=config.color).set_image(url="https://i.imgur.com/PAoNK7Q.gif"),
                 discord.Embed(title="Settings help", description=f"""
 You may want to keep every emoji available to some roles, the **persistent roles** helps you setting this up. You can use this feature to let admins use every emoji.
 Adding a role to the persistent roles list will automatically lock the emojis you are locking with other commands to the persistent roles.
 
 To set this up, run `{_help.context.prefix}settings roles` and follow the instructions in the gif below.
-""",color=config.color).set_image(url="https://i.imgur.com/kavEM0f.gif"),
+""", color=config.color).set_image(url="https://i.imgur.com/kavEM0f.gif"),
                 discord.Embed(title="Settings help", description=f"""
 If you edit your persistent roles setup you may notice that previously added emojis are not synced with the persistent roles, to fix this just run `{_help.context.prefix}settings roles sync`.
-""",color=config.color).set_image(url="https://i.imgur.com/EwySUSi.gif"),
+""", color=config.color).set_image(url="https://i.imgur.com/EwySUSi.gif"),
             ],
-            [discord.Embed(title=f"Commands - {cog.qualified_name}",description=_help.get_cog_desc(cog),colour=discord.Colour.red()) for cog in mapping]
+            [discord.Embed(title=f"Commands - {cog.qualified_name}", description=_help.get_cog_desc(cog),
+                           colour=discord.Colour.red()) for cog in mapping]
 
         ]
         super().__init__(placeholder='Select a tutorial', options=options)
         self.selected_page = 0
         self.selected_subpage = 0
         self.commands = mapping
-
 
     @property
     def visualized_page(self):
@@ -458,7 +442,7 @@ If you edit your persistent roles setup you may notice that previously added emo
         self.view.children[2].disabled = False
         if self.selected_subpage == 0:
             self.view.children[1].disabled = True
-        if self.selected_subpage == len(self.embeds[self.selected_page])-1:
+        if self.selected_subpage == len(self.embeds[self.selected_page]) - 1:
             self.view.children[2].disabled = True
 
         self.embed = self.embeds[self.selected_page][self.selected_subpage]
@@ -468,13 +452,13 @@ If you edit your persistent roles setup you may notice that previously added emo
     async def back(self, interaction: discord.Interaction):
         self.selected_subpage -= 1
         self.update()
-        await interaction.response.edit_message(embed=self.embed,view=self.view)
+        await interaction.response.edit_message(embed=self.embed, view=self.view)
 
     async def _next(self, interaction: discord.Interaction):
         self.selected_subpage += 1
         self.update()
-        await interaction.response.edit_message(embed=self.embed,view=self.view)
-        
+        await interaction.response.edit_message(embed=self.embed, view=self.view)
+
     async def callback(self, interaction: discord.Interaction):
         option = int(interaction.data['values'][0])
         embeds = self.embeds[option]

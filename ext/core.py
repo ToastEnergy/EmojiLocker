@@ -129,21 +129,19 @@ class Core(commands.Cog):
 
     @commands.group(usage='<role> <role>...', invoke_without_command=True)
     @commands.max_concurrency(5, commands.BucketType.user)
-    async def lockall(self, ctx, *, roles: commands.Greedy[discord.Role] = None):
+    async def lockall(self, ctx, roles: commands.Greedy[discord.Role] = None):
         """Lock every emoji in the server, making them available to the roles specified"""
         if roles == None:
             return await self.bot.get_command('wizard lockall').__call__(ctx)
 
         persistent = await self.bot.get_persistent_roles(ctx)
-        ctx.roles = set(
-            [await commands.RoleConverter().convert(ctx, role.strip()) for role in roles if role != ""]).union(
-            persistent)
-        embed = discord.Embed(title='Locking all emojis!', description='''Do you want to **keep** the roles in the existent setup or overwrite them?
+        ctx.roles = set(roles).union(persistent)
+        embed = discord.Embed(title='Locking all emojis!', description='''Do you want to **keep** the roles in the existent setup or **overwrite** them?
 
 If you select **keep** an emoji already locked to @role1  will be locked to @role1 + the roles that you specified in the command
 
 if you select **overwrite** it will be locked only to the roles that you just specified.
-''', color=config.color_red)
+''', color=config.color)
         view = views.LockallView(ctx)
         await ctx.reply_embed(embed=embed, view=view)
         await view.wait()

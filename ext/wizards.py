@@ -1,4 +1,6 @@
 import discord
+import config
+
 from discord.ext import commands
 from utils import views
 
@@ -25,7 +27,8 @@ class Wizards(commands.Cog):
     async def wizard(self, ctx):
         """Guided procedure to lock an emoji(s) to a role(s)"""
         ctx.embed = discord.Embed(title="Guided locking",
-                                  description="Select the emojis you want to lock with the menu below, then click continue")
+                                  description="Select the emojis you want to lock with the menu below, then click continue",
+                                  color=config.color)
         ctx.persistent = set(await self.bot.get_persistent_roles(ctx))
         ctx.roles = set()
         ctx.emojis = set()
@@ -44,7 +47,8 @@ class Wizards(commands.Cog):
         if len(ctx.locked) == 0:
             raise(commands.BadArgument('There are no locked emojis!'))
         embed = discord.Embed(title="Unlocking emojis!",
-                              description="Select the emojis you want to unlock with the menu below, then click continue")
+                              description="Select the emojis you want to unlock with the menu below, then click "
+                                          "continue", color=config.color)
         view = views.MassUnlockSelectView(ctx)
         await ctx.reply_embed(embed=embed, view=view)
         await view.wait()
@@ -54,7 +58,8 @@ class Wizards(commands.Cog):
     async def lockall_wizard(self, ctx):
         """Guided procedure to lock every emoji in the server"""
         embed = discord.Embed(title="Locking all emojis!",
-                              description="You are locking every emoji of the server to some roles, select them with the menu below, then click continue")
+                              description="You are locking every emoji of the server to some roles, select them with "
+                                          "the menu below, then click continue",color=config.color)
         ctx.persistent = set(await self.bot.get_persistent_roles(ctx))
         ctx.roles = set()
         view = views.LockAllSelectView(ctx)
