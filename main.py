@@ -25,13 +25,40 @@ If you need any help join the **[support server](https://discord.gg/TaJubW7)**
 
 
 class LockHelp(commands.HelpCommand):
+    def __init__(self):
+        super().__init__(verify_checks=False)
+
+    def get_command_desc(self, command):
+        r = f"""`{command.name}`
+aliases : {",".join(command.aliases) or "No aliases"}
+usage : {command.usage}
+> {command.help or "No help provided"}
+"""
+        if isinstance(command,commands.Group):
+            for x in command.commands:
+                r += f"""
+`{x.parent.name} {x.name}`
+aliases : {",".join(x.aliases) or "No aliases"}
+usage : {x.usage}
+> {x.help}
+"""
+
+        return r
+
+    def get_cog_desc(self, cog):
+        r = ""
+        for command in cog.get_commands():
+            r += self.get_command_desc(command) + "\n"
+        return r
+
     async def send_bot_help(self, mapping):
         embed = discord.Embed(title='Emoji Locker',
                               description=self.context.bot.description, color=config.color)
         embed.set_thumbnail(url=str(self.context.bot.user.avatar))
         embed.set_footer(text="Made with ♥ by Toast Energy")
         view = views.OwnView(self.context)
-        view.add_item(views.HelpSelect(self, mapping))
+        entries = [self.context.bot.get_cog(cog) for cog in self.context.bot.cogs if cog not in ["Jishaku","Events"]]
+        view.add_item(views.HelpSelect(self, entries))
         await self.context.reply_embed(embed=embed, view=view)
 
 

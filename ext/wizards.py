@@ -10,7 +10,7 @@ class Wizards(commands.Cog):
     async def cog_check(self, ctx):
         if not ctx.guild:
             raise commands.NoPrivateMessage()
-        if(len(ctx.guild.emojis) == 0):
+        if len(ctx.guild.emojis) == 0:
             raise commands.BadArgument('There are no emojis in this server!')
         if ctx.command.name in ['packs', 'emojiinfo']:
             return True

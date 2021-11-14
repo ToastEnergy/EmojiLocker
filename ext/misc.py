@@ -10,9 +10,10 @@ class Misc(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
+    @commands.command(usage="<emoji>")
     @commands.guild_only()
     async def emojiinfo(self, ctx, *, emoji: discord.Emoji):
+        """Get info about an emoji"""
         embed = discord.Embed(title=emoji.name)
         embed.color = config.color
         embed.set_thumbnail(url=str(emoji.url))
@@ -28,9 +29,10 @@ class Misc(commands.Cog):
         """
         await ctx.reply_embed(embed=embed)
 
-    @commands.command()
+    @commands.command(aliases=["packs"])
     @commands.max_concurrency(3, commands.BucketType.user)
-    async def packs(self, ctx):
+    async def emojis(self, ctx):
+        """List all the server emojis grouped by roles"""
         ctx.packs = []
         ctx.keys = []
         def func(x): return x.roles

@@ -104,7 +104,7 @@ class LockallView(OwnView):
                 text='If you can\'t use the emojis but you have at least one of these roles try to fully restart your Discord app')
             await message.edit(content=None, embed=embed)
         except Exception as e:
-            raise(e)
+            raise e
         finally:
             self.stop()
 
@@ -382,7 +382,7 @@ class RolesView(OwnView):
 
 
 class HelpSelect(discord.ui.Select):
-    def __init__(self, help, mapping):
+    def __init__(self, _help, mapping):
         options = [
             discord.SelectOption(
                 label='Basics', description='Learn about basic commands', emoji='🟥', value="0"),
@@ -400,7 +400,7 @@ class HelpSelect(discord.ui.Select):
 
                 The **lock** command can add a role to the emoji's whitelist, so only who has at least one of the roles in the whitelist will be able to use emoji.
 
-                Just run `{help.context.prefix}lock` and follow the steps in the gif below.
+                Just run `{_help.context.prefix}lock` and follow the steps in the gif below.
 """,color=config.color)
                 .set_image(url="https://i.imgur.com/C2itzck.gif"),
 
@@ -413,9 +413,9 @@ class HelpSelect(discord.ui.Select):
                 discord.Embed(title="Basics", description=f"""
                 The **unlock** command disables the whitelist for an emoji, so everyone will be able to use it.
 
-                The command also have a **non-interactive** version, `{help.context.prefix}unlock <emoji>` (don't actually type <>)
+                The command also have a **non-interactive** version, `{_help.context.prefix}unlock <emoji>` (don't actually type <>)
 
-                Its usage is very similare to the lock command, just run `{help.context.prefix}unlock` and follow the steps in the gif below.
+                Its usage is very similare to the lock command, just run `{_help.context.prefix}unlock` and follow the steps in the gif below.
 """,color=config.color).set_image(url="https://i.imgur.com/AKvKh8b.gif")
             ],
             [
@@ -424,7 +424,7 @@ There are two configurable settings, the bot's **prefix** and the **persistent r
 """,color=config.color),
 
                 discord.Embed(title="Settings help", description=f"""
-You can change the **prefix** of the bot with `{help.context.prefix}settings prefix <prefix>` (don't type <>)
+You can change the **prefix** of the bot with `{_help.context.prefix}settings prefix <prefix>` (don't type <>)
 
 After changing the bot's prefix, you will no longer able to invoke commands using `e!` but with the prefix you just set.
 
@@ -434,13 +434,13 @@ If you forget the prefix, you will still be able to use the bot by @mentioning t
 You may want to keep every emoji available to some roles, the **persistent roles** helps you setting this up. You can use this feature to let admins use every emoji.
 Adding a role to the persistent roles list will automatically lock the emojis you are locking with other commands to the persistent roles.
 
-To set this up, run `{help.context.prefix}settings roles` and follow the instructions in the gif below.
+To set this up, run `{_help.context.prefix}settings roles` and follow the instructions in the gif below.
 """,color=config.color).set_image(url="https://i.imgur.com/kavEM0f.gif"),
                 discord.Embed(title="Settings help", description=f"""
-If you edit your persistent roles setup you may notice that previously added emojis are not synced with the persistent roles, to fix this just run `{help.context.prefix}settings roles sync`.
+If you edit your persistent roles setup you may notice that previously added emojis are not synced with the persistent roles, to fix this just run `{_help.context.prefix}settings roles sync`.
 """,color=config.color).set_image(url="https://i.imgur.com/EwySUSi.gif"),
             ],
-            [discord.Embed(title="Coming soon...")]
+            [discord.Embed(title=f"Commands - {cog.qualified_name}",description=_help.get_cog_desc(cog),colour=discord.Colour.red()) for cog in mapping]
 
         ]
         super().__init__(placeholder='Select a tutorial', options=options)

@@ -29,7 +29,6 @@ class Settings(commands.Cog):
     async def settings(self, ctx):
         """View the server settings"""
         data = (await self.bot.db.get_guild(ctx.guild.id)) or {}
-        prefix = data.get('prefix')
         if not data:
             roles = 'No roles'
             prefix = config.prefix
