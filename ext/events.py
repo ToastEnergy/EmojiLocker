@@ -42,23 +42,23 @@ class Events(commands.Cog):
             type(error), error, error.__traceback__)
         invoke = ctx.message.content
         if len(invoke) > 800:
-            invoke = invoke[:800]+"..."
+            invoke = invoke[:800] + '...'
         emb = discord.Embed()
-        emb.add_field(name="Message",
-                      value=f"`{invoke}` (`{ctx.message.id}`)", inline=False)
+        emb.add_field(name='Message',
+                      value=f'`{invoke}` (`{ctx.message.id}`)', inline=False)
         emb.add_field(
-            name="Author", value=f"`{str(ctx.author)}` (`{ctx.author.id}`)", inline=False)
+            name='Author', value=f'`{str(ctx.author)}` (`{ctx.author.id}`)', inline=False)
         if ctx.guild:
             emb.add_field(
-                name="Channel", value=f"`#{ctx.channel.name}` (`{ctx.channel.id}`)", inline=False)
+                name='Channel', value=f'`#{ctx.channel.name}` (`{ctx.channel.id}`)', inline=False)
             emb.add_field(
-                name="Guild", value=f"`{ctx.guild.name}` (`{ctx.guild.id}`)", inline=False)
+                name='Guild', value=f'`{ctx.guild.name}` (`{ctx.guild.id}`)', inline=False)
             emb.set_thumbnail(url=str(ctx.guild.icon))
         else:
-            emb.add_field(name="Channel", value=f"`DM Channel`", inline=False)
+            emb.add_field(name='Channel', value=f'`DM Channel`', inline=False)
         time = round(datetime.timestamp(datetime.now()))
-        emb.add_field(name="When", value=f"<t:{time}:f>", inline=False)
-        emb.add_field(name="Error", value=f"```py\n{str(error)}\n```")
+        emb.add_field(name='When', value=f'<t:{time}:f>', inline=False)
+        emb.add_field(name='Error', value=f'```py\n{str(error)}\n```')
         emb.set_author(name=str(ctx.author),
                        icon_url=str(ctx.author.display_avatar))
         color = discord.Color.red()
@@ -66,13 +66,13 @@ class Events(commands.Cog):
         self.bot.tracebacks[self.bot.tid] = traceback_
         self.bot.tid += 1
         base_error = errors.get(type(error))
-        if base_error == True:
+        if base_error is True:
             description = str(error)
-        elif base_error == None:
+        elif base_error is None:
             parent_err = errors.get(type(error).__bases__[0])
-            if parent_err == True:
+            if parent_err is True:
                 description = str(error)
-            elif parent_err == None:
+            elif parent_err is None:
                 description = UNKNOWN_ERROR
                 color = discord.Color.dark_magenta()
 
@@ -92,13 +92,13 @@ class Events(commands.Cog):
     @commands.command(hidden=True)
     @commands.is_owner()
     async def vt(self, ctx, tid: int):
-        paginator = commands.Paginator(suffix="```", prefix="```")
+        paginator = commands.Paginator(suffix='```', prefix='```')
         tracebacks = self.bot.tracebacks[tid]
         for x in tracebacks:
             paginator.add_line(x)
         for x in paginator.pages:
             embed = discord.Embed(
-                title="Traceback inspector", color=discord.Color.red(), description=x)
+                title='Traceback inspector', color=discord.Color.red(), description=x)
             await ctx.reply_embed(embed=embed)
 
     @commands.Cog.listener()
@@ -106,18 +106,18 @@ class Events(commands.Cog):
         time = round(datetime.timestamp(datetime.now()))
         emb = discord.Embed(color=discord.Color.green())
         emb.add_field(
-            name="Message", value=f"`{ctx.message.content}` (`{ctx.message.id}`)", inline=False)
+            name='Message', value=f'`{ctx.message.content}` (`{ctx.message.id}`)', inline=False)
         emb.add_field(
-            name="Author", value=f"`{str(ctx.author)}` (`{ctx.author.id}`)", inline=False)
+            name='Author', value=f'`{str(ctx.author)}` (`{ctx.author.id}`)', inline=False)
         if ctx.guild:
             emb.add_field(
-                name="Channel", value=f"`#{ctx.channel.name}` (`{ctx.channel.id}`)", inline=False)
+                name='Channel', value=f'`#{ctx.channel.name}` (`{ctx.channel.id}`)', inline=False)
             emb.add_field(
-                name="Guild", value=f"`{ctx.guild.name}` (`{ctx.guild.id}`)", inline=False)
+                name='Guild', value=f'`{ctx.guild.name}` (`{ctx.guild.id}`)', inline=False)
             emb.set_thumbnail(url=str(ctx.guild.icon))
         else:
-            emb.add_field(name="Channel", value=f"`DM Channel`", inline=False)
-        emb.add_field(name="When", value=f"<t:{time}:f>", inline=False)
+            emb.add_field(name='Channel', value=f'`DM Channel`', inline=False)
+        emb.add_field(name='When', value=f'<t:{time}:f>', inline=False)
         emb.set_author(name=str(ctx.author),
                        icon_url=str(ctx.author.display_avatar))
         await self.commands_webhook.send(embed=emb)

@@ -28,7 +28,7 @@ class BaseView(OwnView):
     async def _continue(self, button, interaction):
         await interaction.response.defer()
         message = await interaction.original_message()
-        await self.do_bulk(message)
+        await self.do_bulk(message,True)
 
     @discord.ui.button(label='Cancel', style=discord.ButtonStyle.red)
     async def cancel(self, button, interaction):
@@ -68,7 +68,7 @@ class BaseView(OwnView):
 class LockallView(BaseView):
     def __init__(self, ctx):
         super().__init__(ctx)
-        self.children[0].label = "Keep"
+        self.children[0].label = 'Keep'
         self.clear_items()
         self.add_item(self._continue)
         self.add_item(self.overwrite_button)
@@ -77,8 +77,9 @@ class LockallView(BaseView):
 
     @property
     def confirm_embed(self):
-        return discord.Embed(title='Emojis succesfully unlocked', color=config.color,
-                             description=f'''🔓 I have succesfully locked all of your server emojis with {self.failed} failed edits.\n ℹ️ Now only the people with at least one of the roles that you specified ({','.join([r.mention for r in self.ctx.roles])}) will be able to use the emojis''').set_footer(
+        return discord.Embed(title='Emojis succesfully locked', color=config.color,
+                             description=f'''🔓 I have succesfully locked all of your server emojis with {self.failed} failed edits.
+        ℹ️ Now only the people with at least one of the roles that you specified ({','.join([r.mention for r in self.ctx.roles])}) will be able to use the emojis''').set_footer(
             text='If you can\'t use the emojis try to fully restart your Discord app')
 
 
@@ -94,11 +95,11 @@ class SupportView(OwnView):
         self.remove_item(button)
         embed = self.ctx.embed
         command = self.ctx.command
-        embed.add_field(name='Command help', value=f"""`{command.name}`
-aliases : {",".join(command.aliases) or "No aliases"}
+        embed.add_field(name='Command help', value=f'''`{command.name}`
+aliases : {", ".join(command.aliases) or "No aliases"}
 usage : {command.usage}
-> {command.help or "No help provided"}
-""")
+> {command.help or 'No help provided'}
+''')
         await interaction.response.edit_message(view=self, embed=embed, content=None)
 
 
@@ -135,20 +136,20 @@ class PacksView(OwnView):
         except:
             pass
 
-    @discord.ui.button(style=discord.ButtonStyle.blurple, emoji="◀️")
+    @discord.ui.button(style=discord.ButtonStyle.blurple, emoji='◀️')
     async def back(self, button, interaction):
         self.page -= 1
         self.update()
         await interaction.response.edit_message(view=self, embed=self.ctx.embed)
 
-    @discord.ui.button(style=discord.ButtonStyle.grey, emoji="⏹️")
+    @discord.ui.button(style=discord.ButtonStyle.grey, emoji='⏹️')
     async def _stop(self, button, interaction):
         for x in self.children:
             x.disabled = True
         await interaction.response.edit_message(view=self)
         self.stop()
 
-    @discord.ui.button(style=discord.ButtonStyle.blurple, emoji="▶️")
+    @discord.ui.button(style=discord.ButtonStyle.blurple, emoji='▶️')
     async def _next(self, button, interaction):
         self.page += 1
         self.update()
@@ -222,7 +223,7 @@ class MassUnlockSelectView(BaseView):
             return await interaction.response.send_message('Select at least one emoji', ephemeral=True)
         await interaction.response.defer()
         message = await interaction.original_message()
-        await self.do_bulk(message)
+        await self.do_bulk(message, True)
 
     @property
     def confirm_embed(self):
@@ -249,7 +250,7 @@ class MultipleSelectView(BaseView):
             if len(self.ctx.emojis) == 0:
                 return await interaction.response.send_message('Select at least one emoji', ephemeral=True)
             self.clear_items()
-            self._continue.label = "Keep"
+            self._continue.label = 'Keep'
             self.add_item(self._continue)
             self.add_item(self.overwrite_button)
             self.add_item(self.cancel)
@@ -258,13 +259,13 @@ class MultipleSelectView(BaseView):
                     self.ctx, self.ctx.guild.roles[1:][i:i + 25])
                 self.add_item(s)
                 self._roles[s] = set()
-            self.ctx.embed.description = """
+            self.ctx.embed.description = '''
 Select the roles that will be able to use the selected emojis with the menu below, then click Keep or Overwrite
 
 If you select **keep** an emoji already locked to @role1 will be locked to @role1 + the roles that you specified in the command
 
 if you select **overwrite** it will be locked only to the roles that you just specified.
-"""
+'''
             await interaction.response.edit_message(view=self, embed=self.ctx.embed)
         elif self.step == 1:
             if len(self.ctx.roles) == 0:
@@ -324,9 +325,9 @@ class RolesView(OwnView):
         self.add_item(self.cancel)
         self.ctx.data = await self.ctx.bot.get_persistent_roles(self.ctx)
         if not self.ctx.data:
-            self.ctx.embed.description = "There are no persistent roles for this server"
+            self.ctx.embed.description = 'There are no persistent roles for this server'
         else:
-            self.ctx.embed.description = f"The persistent roles for this server are {', '.join(map(lambda r: r.mention, self.ctx.data))}"
+            self.ctx.embed.description = f'The persistent roles for this server are {", ".join(map(lambda r: r.mention, self.ctx.data))}'
         await interaction.followup.edit_message(message_id=interaction.message.id, view=self, embed=self.ctx.embed)
 
     async def remove_roles(self, interaction: discord.Interaction):
@@ -339,9 +340,9 @@ class RolesView(OwnView):
         self.add_item(self.cancel)
         self.ctx.data = await self.ctx.bot.get_persistent_roles(self.ctx)
         if not self.ctx.data:
-            self.ctx.embed.description = "There are no persistent roles for this server"
+            self.ctx.embed.description = 'There are no persistent roles for this server'
         else:
-            self.ctx.embed.description = f"The persistent roles for this server are {', '.join(map(lambda r: r.mention, self.ctx.data))}"
+            self.ctx.embed.description = f'The persistent roles for this server are {", ".join(map(lambda r: r.mention, self.ctx.data))}'
         await interaction.followup.edit_message(message_id=interaction.message.id, view=self, embed=self.ctx.embed)
 
     @discord.ui.button(label='Remove', style=discord.ButtonStyle.blurple)
@@ -369,11 +370,12 @@ class HelpSelect(discord.ui.Select):
     def __init__(self, _help, mapping):
         options = [
             discord.SelectOption(
-                label='Main menu' , description='Introduction', emoji='🏠', value='0',default=True
+                label='Main menu', description='Introduction', emoji='🏠', value='0', default=True
             ),
             discord.SelectOption(
                 label='Basics', description='Start here!', emoji='🔒', value='1'),
-            discord.SelectOption(label='Bulk actions', description='Learn about bulk commands like lockall',emoji='📚',value='2'),
+            discord.SelectOption(label='Bulk actions', description='Learn about bulk commands like lockall', emoji='📚',
+                                 value='2'),
             discord.SelectOption(
                 label='Advanced Settings', description='Help about the bot\'s customizations', emoji='⚙️', value='3'),
             discord.SelectOption(
@@ -385,28 +387,28 @@ class HelpSelect(discord.ui.Select):
                 _help.start_embed
             ],
             [
-                discord.Embed(title="Basics", description=f"""
-                You can manage your emojis whitelists with 2 basic commands, `lock` and `unlock`
+                discord.Embed(title='Basics', description=f'''
+You can manage your emojis whitelists with 2 basic commands, `lock` and `unlock`
 
 The **lock** command can add a role to the emoji's whitelist, so only who has at least one of the roles in the whitelist will be able to use emoji.
 
 Just run `{_help.context.prefix}lock` and follow the steps in the gif below.
-""", color=config.color).set_image(url="https://i.imgur.com/C2itzck.gif"),
+''', color=config.color).set_image(url='https://i.imgur.com/dFDkbjM.gif'),
 
-                discord.Embed(title="Basics", description="""You can also use the **non-interactive** version of the **lock** command.
+                discord.Embed(title="Basics", description='''You can also use the **non-interactive** version of the **lock** command.
                 
 As you can see from this gif, the locked emojis completely disappear from the emoji picker if you don't have the required roles.
-""", color=config.color).set_image(url="https://i.imgur.com/37zjqX7.gif"),
+''', color=config.color).set_image(url='https://i.imgur.com/oUmEktv.gif'),
 
-                discord.Embed(title="Basics", description=f"""
+                discord.Embed(title="Basics", description=f'''
 The **unlock** command disables the whitelist for an emoji, so everyone will be able to use it.
 
 The command also have a **non-interactive** version, `{_help.context.prefix}unlock <emoji>` (don't actually type <>)
 
 Its usage is very similar to the lock command, just run `{_help.context.prefix}unlock` and follow the steps in the gif below.
-""", color=config.color).set_image(url="https://i.imgur.com/AKvKh8b.gif")
+''', color=config.color).set_image(url='https://i.imgur.com/aNFtNcC.gif')
             ],
-            [ discord.Embed(title="Bulk commands",description=f"""
+            [discord.Embed(title='Bulk commands', description=f'''
 If you have to lock/unlock multiple emojis or even all of your server emojis you can do so with these commands:
 
 - `lockall`
@@ -415,54 +417,54 @@ If you have to lock/unlock multiple emojis or even all of your server emojis you
 - `massunlock`
 
 Learn more about these commands in the next pages
-""",color=config.color),
-    discord.Embed(title="Bulk commands | lockall",description=f"""
-The `lockall` command locks every emoji of the server for you, you can run it without arguments (**interactive mode**) or by specifying the roles (**manual mode**)
+''', color=config.color),
+             discord.Embed(title='Bulk commands | lockall', description=f'''
+The `lockall` command locks every emoji of the server for you, you can run it without arguments (**guided mode**) or by specifying the roles (**manual mode**)
 
-If you want to use it in **interactive mode** just run `{_help.context.prefix}lockall` and follow the interactive setup
+If you want to use it in **guided mode** just run `{_help.context.prefix}lockall` and follow the interactive setup
 
 If you don't want to follow the interactive setup use the **manual mode** by running `{_help.context.prefix}lockall @role1 "Role 2" @role3`, as you can see you can pass the mention and the role name, if the name has spaces in it, put it in quotes.
 The roles passed will be the roles to which every emoji of the server will be whitelisted.
-""", color=config.color),
-    discord.Embed(title="Bulk commands | unlockall", description=f"""
+''', color=config.color).set_image(url='https://i.imgur.com/l0rWqV5.gif'),
+             discord.Embed(title='Bulk commands | unlockall', description=f'''
 `unlockall` unlocks every emoji of the server, making the available to everyone
 
 To run it, just type `{_help.context.prefix}unlockall` and click the confirm button
-""", color=config.color),
-    discord.Embed(title="Bulk commands | multiple",description=f"""
-With `multiple`, you can lock multiple emojis to multiple roles, as the **manual** syntax can be confusing, you can use the **interactive mode** as it's easier.
+''', color=config.color).set_thumbnail(url="https://i.imgur.com/1aDH75A.gif"),
+             discord.Embed(title="Bulk commands | multiple", description=f'''
+`multiple` allows you to lock multiple emojis to multiple roles, as the **manual** syntax can be confusing, you can use the **guided mode** as it's easier.
 
-To run `multiple` in **interactive mode**, just type `{_help.context.prefix}multiple`
+To run `multiple` in **guided mode**, just type `{_help.context.prefix}multiple`
 
 If you want to use the **manual mode** the syntax is the following:
 `{_help.context.prefix}multiple emoji1 :emoji2: , @role1 "role 2"`
 
-Note that the comma is required and you can always type the name of the emojis/roles (if they have spaces in them just put them in quotes)
-""",color=config.color)
-],
+Note that the comma is required and you can always type the name of the emojis/roles (if they have spaces just put them in quotes)
+''', color=config.color)
+             ],
             [
-                discord.Embed(title="Settings help", description=f"""
+                discord.Embed(title='Settings help', description=f'''
 There are two configurable settings, the bot's **prefix** and the **persistent roles**, read the next pages to learn more.
-""", color=config.color),
+''', color=config.color),
 
-                discord.Embed(title="Settings help", description=f"""
+                discord.Embed(title='Settings help', description=f'''
 You can change the **prefix** of the bot with `{_help.context.prefix}settings prefix <prefix>` (don't type <>)
 
 After changing the bot's prefix, you will no longer able to invoke commands using `e!` but with the prefix you just set.
 
 If you forget the prefix, you will still be able to use the bot by @mentioning the bot.
-""", color=config.color).set_image(url="https://i.imgur.com/PAoNK7Q.gif"),
-                discord.Embed(title="Settings help", description=f"""
-You may want to keep every emoji available to some roles, the **persistent roles** helps you setting this up. You can use this feature to let admins use every emoji.
+''', color=config.color).set_image(url='https://i.imgur.com/PAoNK7Q.gif'),
+                discord.Embed(title='Settings help', description=f'''
+You may want to keep every emoji available to some roles, the **persistent roles** feature helps you setting this up. For instance you can use this feature to let admins use every emoji.
 Adding a role to the persistent roles list will automatically lock the emojis you are locking with other commands to the persistent roles.
 
 To set this up, run `{_help.context.prefix}settings roles` and follow the instructions in the gif below.
-""", color=config.color).set_image(url="https://i.imgur.com/kavEM0f.gif"),
-                discord.Embed(title="Settings help", description=f"""
+''', color=config.color).set_image(url='https://i.imgur.com/kavEM0f.gif'),
+                discord.Embed(title='Settings help', description=f'''
 If you edit your persistent roles setup you may notice that previously added emojis are not synced with the persistent roles, to fix this just run `{_help.context.prefix}settings roles sync`.
-""", color=config.color).set_image(url="https://i.imgur.com/EwySUSi.gif"),
+''', color=config.color).set_image(url='https://i.imgur.com/EwySUSi.gif'),
             ],
-            [discord.Embed(title=f"Commands - {cog.qualified_name}", description=_help.get_cog_desc(cog),
+            [discord.Embed(title=f'Commands - {cog.qualified_name}', description=_help.get_cog_desc(cog),
                            colour=discord.Colour.red()) for cog in mapping]
 
         ]
@@ -505,10 +507,10 @@ If you edit your persistent roles setup you may notice that previously added emo
 
         if len(embeds) > 1:
             back = discord.ui.Button(
-                style=discord.ButtonStyle.blurple, emoji="◀️")
+                style=discord.ButtonStyle.blurple, emoji='◀️')
             back.callback = self.back
             _next = discord.ui.Button(
-                style=discord.ButtonStyle.blurple, emoji="▶️")
+                style=discord.ButtonStyle.blurple, emoji='▶️')
             _next.callback = self._next
             self.view.add_item(back)
             self.view.add_item(_next)

@@ -10,14 +10,14 @@ class Misc(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(usage="<emoji>")
+    @commands.command(usage='<emoji>')
     @commands.guild_only()
     async def emojiinfo(self, ctx, *, emoji: discord.Emoji):
         """Get info about an emoji"""
         embed = discord.Embed(title=emoji.name)
         embed.color = config.color
         embed.set_thumbnail(url=str(emoji.url))
-        embed.description = f"""
+        embed.description = f'''
 **Animated?** : {emoji.animated}
 **Roles** : {", ".join([x.mention for x in emoji.roles]) or '@everyone'}
 **Guild** : {emoji.guild.name} [{emoji.guild.id}]
@@ -26,7 +26,7 @@ class Misc(commands.Cog):
 **Managed by an integration?** : {emoji.managed}
 **Created at** : {emoji.created_at.strftime("%m/%d/%Y, %H:%M:%S")}
 **Download link** : [Click here]({str(emoji.url)})
-        """
+        '''
         await ctx.reply_embed(embed=embed)
 
     @commands.command(aliases=["packs"])

@@ -27,7 +27,7 @@ class Wizards(commands.Cog):
     async def wizard(self, ctx):
         """Guided procedure to lock an emoji(s) to a role(s)"""
         ctx.embed = discord.Embed(title="Guided locking",
-                                  description="Select the emojis you want to lock with the menu below, then click continue",
+                                  description='Select the emojis you want to lock with the menu below, then click continue',
                                   color=config.color)
         ctx.persistent = set(await self.bot.get_persistent_roles(ctx))
         ctx.roles = set()
@@ -45,10 +45,10 @@ class Wizards(commands.Cog):
         ctx.locked = [
             emoji for emoji in ctx.guild.emojis if len(emoji.roles) > 0]
         if len(ctx.locked) == 0:
-            raise(commands.BadArgument('There are no locked emojis!'))
-        embed = discord.Embed(title="Unlocking emojis!",
-                              description="Select the emojis you want to unlock with the menu below, then click "
-                                          "continue", color=config.color)
+            raise (commands.BadArgument('There are no locked emojis!'))
+        embed = discord.Embed(title='Unlocking emojis!',
+                              description='Select the emojis you want to unlock with the menu below, then click '
+                                          'continue', color=config.color)
         view = views.MassUnlockSelectView(ctx)
         await ctx.reply_embed(embed=embed, view=view)
         await view.wait()
@@ -58,8 +58,11 @@ class Wizards(commands.Cog):
     async def lockall_wizard(self, ctx):
         """Guided procedure to lock every emoji in the server"""
         embed = discord.Embed(title="Locking all emojis!",
-                              description="You are locking every emoji of the server to some roles, select them with "
-                                          "the menu below, then click continue",color=config.color)
+                              description='''You are locking every emoji of the server to some roles, select them with the menu below, then click Keep or Overwrite
+If you select **keep** an emoji already locked to @role1 will be locked to @role1 + the roles that you specified in the command
+
+if you select **overwrite** it will be locked only to the roles that you just specified.
+''', color=config.color)
         ctx.persistent = set(await self.bot.get_persistent_roles(ctx))
         ctx.roles = set()
         view = views.LockAllSelectView(ctx)

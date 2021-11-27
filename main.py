@@ -7,9 +7,9 @@ from discord.ext import commands
 import config
 from utils import database, views
 
-os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
-os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
-os.environ["JISHAKU_HIDE"] = "True"
+os.environ['JISHAKU_NO_UNDERSCORE'] = 'True'
+os.environ['JISHAKU_NO_DM_TRACEBACK'] = 'True'
+os.environ['JISHAKU_HIDE'] = 'True'
 
 DESCRIPTION = '''
 This bot can whitelist the usage of **custom emojis** to server roles, making them **disappear** from the emoji picker!
@@ -29,36 +29,36 @@ class LockHelp(commands.HelpCommand):
         super().__init__(verify_checks=False)
 
     def get_command_desc(self, command):
-        r = f"""`{command.name}`
+        r = f'''`{command.name}`
 aliases : {",".join(command.aliases) or "No aliases"}
 usage : {command.usage}
 > {command.help or "No help provided"}
-"""
+'''
         if isinstance(command, commands.Group):
             for x in command.commands:
-                r += f"""
+                r += f'''
 `{x.parent.name} {x.name}`
 aliases : {",".join(x.aliases) or "No aliases"}
 usage : {x.usage}
 > {x.help}
-"""
+'''
 
         return r
 
     def get_cog_desc(self, cog):
         r = ""
         for command in cog.get_commands():
-            r += self.get_command_desc(command) + "\n"
+            r += self.get_command_desc(command) + '\n'
         return r
 
     async def send_bot_help(self, mapping):
         embed = discord.Embed(title='Emoji Locker',
                               description=self.context.bot.description, color=config.color)
         embed.set_thumbnail(url=str(self.context.bot.user.display_avatar))
-        embed.set_footer(text="Made with ♥ by Toast Energy")
+        embed.set_footer(text='Made with ♥ by Toast Energy')
         self.start_embed = embed
         view = views.OwnView(self.context)
-        entries = [self.context.bot.get_cog(cog) for cog in self.context.bot.cogs if cog not in ["Jishaku","Events"]]
+        entries = [self.context.bot.get_cog(cog) for cog in self.context.bot.cogs if cog not in ['Jishaku', 'Events']]
         view.add_item(views.HelpSelect(self, entries))
         await self.context.reply_embed(embed=embed, view=view)
 
@@ -105,9 +105,9 @@ class EmojiLocker(commands.AutoShardedBot):
         await self.db.connect()
         await self.db.populate_cache(self.guilds_cache)
         self.session = aiohttp.ClientSession()
-        for filename in os.listdir("./ext"):
-            if filename.endswith(".py") and not filename.startswith("_"):
-                self.load_extension(f"ext.{filename[:-3]}")
+        for filename in os.listdir('./ext'):
+            if filename.endswith('.py') and not filename.startswith('_'):
+                self.load_extension(f'ext.{filename[:-3]}')
                 print(f'Loaded {filename}')
         await super().login(*args, **kwargs)
 

@@ -69,15 +69,15 @@ Use `{ctx.prefix}settings <setting>` to change a setting
         self.update_cache_key(ctx.guild.id, 'prefix', prefix)
         await ctx.reply('☑')
 
-    @settings.group(invoke_without_command=True,aliases=['role','persistent'])
+    @settings.group(invoke_without_command=True, aliases=['role', 'persistent'])
     async def roles(self, ctx):
         """Change the server's persistent roles. Persistent roles are roles applied in every emoji lock operation
         Useful to keep roles like admin always able to use emojis"""
         ctx.data = await self.bot.get_persistent_roles(ctx)
         if not ctx.data:
-            roles = "There are no persistent roles for this server"
+            roles = 'There are no persistent roles for this server'
         else:
-            roles = f"The persistent roles for this server are {', '.join(map(lambda r : r.mention ,ctx.data))}"
+            roles = f'The persistent roles for this server are {", ".join(map(lambda r: r.mention, ctx.data))}'
         ctx.embed = discord.Embed(
             title=f'{ctx.guild.name}\'s persistent roles')
         ctx.embed.description = roles
@@ -123,5 +123,7 @@ Use `{ctx.prefix}settings <setting>` to change a setting
             except:
                 pass
         await message.edit(f'Updated {len(emojis)} emojis.')
+
+
 def setup(bot):
     bot.add_cog(Settings(bot))
