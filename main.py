@@ -54,8 +54,9 @@ usage : {x.usage}
     async def send_bot_help(self, mapping):
         embed = discord.Embed(title='Emoji Locker',
                               description=self.context.bot.description, color=config.color)
-        embed.set_thumbnail(url=str(self.context.bot.user.avatar))
+        embed.set_thumbnail(url=str(self.context.bot.user.display_avatar))
         embed.set_footer(text="Made with ♥ by Toast Energy")
+        self.start_embed = embed
         view = views.OwnView(self.context)
         entries = [self.context.bot.get_cog(cog) for cog in self.context.bot.cogs if cog not in ["Jishaku","Events"]]
         view.add_item(views.HelpSelect(self, entries))

@@ -369,15 +369,21 @@ class HelpSelect(discord.ui.Select):
     def __init__(self, _help, mapping):
         options = [
             discord.SelectOption(
-                label='Basics', description='Learn about basic commands', emoji='🟥', value="0"),
+                label='Main menu' , description='Introduction', emoji='🏠', value='0',default=True
+            ),
             discord.SelectOption(
-                label='Settings', description='Help about the bot\'s settings', emoji='🟩', value="1"),
+                label='Basics', description='Start here!', emoji='🔒', value='1'),
+            discord.SelectOption(label='Bulk actions', description='Learn about bulk commands like lockall',emoji='📚',value='2'),
             discord.SelectOption(
-                label='All commands', description='Full commands reference', emoji='🟦', value="2")
+                label='Advanced Settings', description='Help about the bot\'s customizations', emoji='⚙️', value='3'),
+            discord.SelectOption(
+                label='All commands', description='Full commands reference', emoji='❓', value='4')
         ]
 
         self.embeds = [
-
+            [
+                _help.start_embed
+            ],
             [
                 discord.Embed(title="Basics", description=f"""
                 You can manage your emojis whitelists with 2 basic commands, `lock` and `unlock`
@@ -400,6 +406,40 @@ The command also have a **non-interactive** version, `{_help.context.prefix}unlo
 Its usage is very similar to the lock command, just run `{_help.context.prefix}unlock` and follow the steps in the gif below.
 """, color=config.color).set_image(url="https://i.imgur.com/AKvKh8b.gif")
             ],
+            [ discord.Embed(title="Bulk commands",description=f"""
+If you have to lock/unlock multiple emojis or even all of your server emojis you can do so with these commands:
+
+- `lockall`
+- `unlockall`
+- `multiple`
+- `massunlock`
+
+Learn more about these commands in the next pages
+""",color=config.color),
+    discord.Embed(title="Bulk commands | lockall",description=f"""
+The `lockall` command locks every emoji of the server for you, you can run it without arguments (**interactive mode**) or by specifying the roles (**manual mode**)
+
+If you want to use it in **interactive mode** just run `{_help.context.prefix}lockall` and follow the interactive setup
+
+If you don't want to follow the interactive setup use the **manual mode** by running `{_help.context.prefix}lockall @role1 "Role 2" @role3`, as you can see you can pass the mention and the role name, if the name has spaces in it, put it in quotes.
+The roles passed will be the roles to which every emoji of the server will be whitelisted.
+""", color=config.color),
+    discord.Embed(title="Bulk commands | unlockall", description=f"""
+`unlockall` unlocks every emoji of the server, making the available to everyone
+
+To run it, just type `{_help.context.prefix}unlockall` and click the confirm button
+""", color=config.color),
+    discord.Embed(title="Bulk commands | multiple",description=f"""
+With `multiple`, you can lock multiple emojis to multiple roles, as the **manual** syntax can be confusing, you can use the **interactive mode** as it's easier.
+
+To run `multiple` in **interactive mode**, just type `{_help.context.prefix}multiple`
+
+If you want to use the **manual mode** the syntax is the following:
+`{_help.context.prefix}multiple emoji1 :emoji2: , @role1 "role 2"`
+
+Note that the comma is required and you can always type the name of the emojis/roles (if they have spaces in them just put them in quotes)
+""",color=config.color)
+],
             [
                 discord.Embed(title="Settings help", description=f"""
 There are two configurable settings, the bot's **prefix** and the **persistent roles**, read the next pages to learn more.
@@ -474,6 +514,12 @@ If you edit your persistent roles setup you may notice that previously added emo
             self.view.add_item(_next)
         self.selected_page = option
         self.selected_subpage = 0
+        for o in self.options:
+            if o.value == interaction.data['values'][0]:
+                o.default = True
+            else:
+                o.default = False
+        self.options[option].default = True
         if len(self.embeds[self.selected_page]) > 1:
             self.update()
         else:
