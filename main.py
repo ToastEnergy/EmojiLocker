@@ -98,6 +98,7 @@ class EmojiLocker(commands.AutoShardedBot):
             everyone=False, replied_user=True, roles=False, users=False
         )
         self.description = DESCRIPTION
+        self.first_ready = True
         self.help_command = LockHelp()
         self.guilds_cache = {}
         self.tid = 0
@@ -112,10 +113,6 @@ class EmojiLocker(commands.AutoShardedBot):
         await self.db.connect()
         await self.db.populate_cache(self.guilds_cache)
         self.session = aiohttp.ClientSession()
-        for filename in os.listdir('./ext'):
-            if filename.endswith('.py') and not filename.startswith('_'):
-                self.load_extension(f'ext.{filename[:-3]}')
-                print(f'Loaded {filename}')
         await super().login(*args, **kwargs)
 
     async def close(self, *args, **kwargs):
@@ -127,6 +124,12 @@ class EmojiLocker(commands.AutoShardedBot):
 
     async def on_ready(self):
         print(f'logged in as {self.user}')
+        if self.first_ready:
+            self.first_ready = False
+            for filename in os.listdir('./ext'):
+                if filename.endswith('.py') and not filename.startswith('_'):
+                    self.load_extension(f'ext.{filename[:-3]}')
+                    print(f'Loaded {filename}')
 
     async def get_custom_prefix(self, bot, message):
         if not message.guild:

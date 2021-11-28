@@ -24,6 +24,8 @@ class Events(commands.Cog):
             config.error_webhook, session=bot.session)
         self.commands_webhook = discord.Webhook.from_url(
             config.commands_webhook, session=bot.session)
+        self.guilds_webhook = discord.Webhook.from_url(
+            config.guilds_webhook, session=bot.session)
 
     async def bot_check(self, ctx):
         if not ctx.author.id in self.bot.owner_ids:
@@ -121,6 +123,31 @@ class Events(commands.Cog):
         emb.set_author(name=str(ctx.author),
                        icon_url=str(ctx.author.display_avatar))
         await self.commands_webhook.send(embed=emb)
+
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild : discord.Guild):
+        owner = await self.bot.fetch_user(guild.owner_id)
+        emb = discord.Embed(title='New Server', color=config.color)
+        emb.set_author(name=guild.name, icon_url=str(guild.icon))
+        emb.set_thumbnail(url=str(guild.icon))
+        emb.add_field(name='ID', value=f'`{guild.id}`')
+        emb.add_field(name='Members', value=guild.member_count)
+        emb.add_field(name='Owner', value=f'`{str(owner)}` (`{owner.id}`)', inline=False)
+        if guild.banner:
+            emb.set_image(url=str(guild.banner))
+        await self.guilds_webhook.send(embed=emb)
+
+    @commands.Cog.listener()
+    async def on_guild_remove(self, guild):
+        emb = discord.Embed(title="Left a server", colour=config.color_red)
+        emb.set_author(name=guild.name, icon_url=str(guild.icon))
+        emb.set_thumbnail(url=str(guild.icon))
+        emb.add_field(name="ID", value=f"`{guild.id}`")
+        emb.add_field(name="Members", value=guild.member_count)
+        emb.add_field(name="Owner", value=f"`{guild.owner_id}`", inline=False)
+        if guild.banner:
+            emb.set_image(url=str(guild.banner))
+        await self.guilds_webhook.send(embed=emb)
 
 
 def setup(bot):
