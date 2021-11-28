@@ -92,7 +92,7 @@ class EmojiContext(commands.Context):
 
 class EmojiLocker(commands.AutoShardedBot):
     def __init__(self):
-        super().__init__(command_prefix=self.get_custom_prefix, case_insensitive=True, status=discord.Game(name=config.status))
+        super().__init__(command_prefix=self.get_custom_prefix, case_insensitive=True, activity=discord.Game(name=config.status))
         self.load_extension('jishaku')
         self.allowed_mentions = discord.AllowedMentions(
             everyone=False, replied_user=True, roles=False, users=False
