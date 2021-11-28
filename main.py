@@ -20,7 +20,7 @@ To learn more, use the **dropdown** below
 If you need any help join the **[support server](https://discord.gg/TaJubW7)**
 
 **[Privacy Policy](https://bit.ly/2ZLoLG1)**
-**[FAQ](https://godo)**
+**[Top.gg](https://top.gg/bot/609087387695316992/)**
 '''
 
 
@@ -30,7 +30,7 @@ class LockHelp(commands.HelpCommand):
 
     def get_command_desc(self, command):
         r = f'''`{command.name}`
-aliases : {",".join(command.aliases) or "No aliases"}
+aliases : {", ".join(command.aliases) or "No aliases"}
 usage : {command.usage}
 > {command.help or "No help provided"}
 '''
@@ -61,6 +61,13 @@ usage : {x.usage}
         entries = [self.context.bot.get_cog(cog) for cog in self.context.bot.cogs if cog not in ['Jishaku', 'Events']]
         view.add_item(views.HelpSelect(self, entries))
         await self.context.reply_embed(embed=embed, view=view)
+
+    async def send_command_help(self, command):
+        embed = discord.Embed(description=self.get_command_desc(command), color=config.color)
+        await self.context.reply_embed(embed=embed)
+
+    async def send_group_help(self, group):
+        return await self.send_command_help(group)
 
 
 class EmojiContext(commands.Context):

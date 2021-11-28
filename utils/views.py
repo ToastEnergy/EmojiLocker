@@ -430,8 +430,8 @@ The roles passed will be the roles to which every emoji of the server will be wh
 `unlockall` unlocks every emoji of the server, making the available to everyone
 
 To run it, just type `{_help.context.prefix}unlockall` and click the confirm button
-''', color=config.color).set_thumbnail(url="https://i.imgur.com/1aDH75A.gif"),
-             discord.Embed(title="Bulk commands | multiple", description=f'''
+''', color=config.color).set_image(url='https://i.imgur.com/1aDH75A.gif'),
+             discord.Embed(title='Bulk commands | multiple', description=f'''
 `multiple` allows you to lock multiple emojis to multiple roles, as the **manual** syntax can be confusing, you can use the **guided mode** as it's easier.
 
 To run `multiple` in **guided mode**, just type `{_help.context.prefix}multiple`
@@ -439,8 +439,8 @@ To run `multiple` in **guided mode**, just type `{_help.context.prefix}multiple`
 If you want to use the **manual mode** the syntax is the following:
 `{_help.context.prefix}multiple emoji1 :emoji2: , @role1 "role 2"`
 
-Note that the comma is required and you can always type the name of the emojis/roles (if they have spaces just put them in quotes)
-''', color=config.color)
+**Note that the comma is required!**
+''', color=config.color).set_image(url='https://i.imgur.com/DTF92b3.gif')
              ],
             [
                 discord.Embed(title='Settings help', description=f'''

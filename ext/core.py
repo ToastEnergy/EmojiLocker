@@ -165,7 +165,7 @@ if you select **overwrite** it will be locked only to the roles that you just sp
             [await commands.EmojiConverter().convert(ctx, emoji.strip()) for emoji in emojis if emoji != ""])
         ctx.roles = set([await commands.RoleConverter().convert(ctx, role.strip()) for role in roles if role != ""])
         persistent = await self.bot.get_persistent_roles(ctx)
-        ctx.roles = persistent.union(ctx.roles)
+        ctx.roles = set(ctx.roles).union(persistent)
         view = views.BaseView(ctx)
         view.confirm_embed = discord.Embed(title='Emojis succesfully locked', color=config.color,
                                            description=f'''🔓 I have succesfully locked {len(ctx.emojis)} emojis\n
