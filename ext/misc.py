@@ -10,6 +10,12 @@ class Misc(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    async def cog_check(self, ctx):
+        if not ctx.guild:
+            raise commands.NoPrivateMessage()
+        if len(ctx.guild.emojis) == 0:
+            raise commands.BadArgument('There are no emojis in this server!')
+
     @commands.command(usage='<emoji>')
     @commands.guild_only()
     async def emojiinfo(self, ctx, *, emoji: discord.Emoji):
