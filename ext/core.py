@@ -42,10 +42,10 @@ class Core(commands.Cog):
         await emoji.edit(name=emoji.name, roles=roles)
 
         description = f'''
-🔒 I have succesfully locked the '{emoji.name}' emoji.\n
+🔒 I have successfully locked the '{emoji.name}' emoji.\n
 ℹ️ Now only the people with at least one of the roles that you specified ({', '.join([r.mention for r in roles])}) will be able to use the emoji'''
 
-        embed = discord.Embed(title='Emoji succesfully locked',
+        embed = discord.Embed(title='Emoji successfully locked',
                               description=description, color=config.color)
         embed.set_footer(
             text='If you can\'t use the emoji but you have at least one of these roles try to fully restart your Discord app')
@@ -71,10 +71,10 @@ class Core(commands.Cog):
         await emoji.edit(name=emoji.name, roles=roles)
 
         description = f'''
-🔒 I have succesfully locked the '{emoji.name}' emoji.\n
+🔒 I have successfully locked the '{emoji.name}' emoji.\n
 ℹ️ Now only the people with at least one of the roles that you specified ({', '.join([r.mention for r in roles])}) will be able to use the emoji'''
 
-        embed = discord.Embed(title='Emoji succesfully locked',
+        embed = discord.Embed(title='Emoji successfully locked',
                               description=description, color=config.color)
         embed.set_footer(
             text="If you can't use the emoji but you have at least one of these roles try to fully restart your Discord app")
@@ -94,13 +94,13 @@ class Core(commands.Cog):
         await emoji.edit(name=emoji.name, roles=[])
 
         description = f'''
-🔒 I have succesfully unlocked the '{emoji.name}' emoji.\n
+🔒 I have successfully unlocked the '{emoji.name}' emoji.\n
 ℹ️ Now everyone will be able to use the emoji'''
         if not ctx.channel.permissions_for(ctx.guild.me).embed_links:
             return await ctx.reply(
                 description + '\n\nPlease consider giving me the embed links permissions to see nicer messages')
 
-        embed = discord.Embed(title='Emoji succesfully locked',
+        embed = discord.Embed(title='Emoji successfully locked',
                               description=description, color=config.color)
         embed.set_footer(
             text="If you can't use the emoji try to fully restart your Discord app")
@@ -120,8 +120,8 @@ class Core(commands.Cog):
                               description=f'You are about to unlock {len(ctx.emojis)} emojis, continue?',
                               color=discord.Color.red())
         view = views.BaseView(ctx)
-        view.confirm_embed = discord.Embed(title='Emojis succesfully unlocked', color=config.color,
-                                           description=f'''🔓 I have succesfully unlocked all of your server emojis.\n
+        view.confirm_embed = discord.Embed(title='Emojis successfully unlocked', color=config.color,
+                                           description=f'''🔓 I have successfully unlocked all of your server emojis.\n
 ℹ️ Now everyone will be able to use all emojis in your server''').set_footer(
             text='If you can\'t use the emojis try to fully restart your Discord app')
         await ctx.reply_embed(embed=embed, view=view)
@@ -167,8 +167,8 @@ if you select **overwrite** it will be locked only to the roles that you just sp
         persistent = await self.bot.get_persistent_roles(ctx)
         ctx.roles = set(ctx.roles).union(persistent)
         view = views.BaseView(ctx)
-        view.confirm_embed = discord.Embed(title='Emojis succesfully locked', color=config.color,
-                                           description=f'''🔓 I have succesfully locked {len(ctx.emojis)} emojis\n
+        view.confirm_embed = discord.Embed(title='Emojis successfully locked', color=config.color,
+                                           description=f'''🔓 I have successfully locked {len(ctx.emojis)} emojis\n
 ℹ️ Now only the people with at least one of the roles that you specified ({','.join([r.mention for r in ctx.roles])}) will be able to use the emojis''')
         view.confirm_embed.set_footer(
             text='If you can\'t use the emojis try to fully restart your Discord app')
@@ -190,8 +190,8 @@ if you select **overwrite** it will be locked only to the roles that you just sp
                                       emoji != ""])))
         ctx.roles = []
         view = views.BaseView(ctx)
-        view.confirm_embed = discord.Embed(title='Emojis succesfully unlocked', color=config.color,
-                                          description=f'''🔓 I have succesfully unlocked {len(ctx.emojis)} emojis\n
+        view.confirm_embed = discord.Embed(title='Emojis successfully unlocked', color=config.color,
+                                          description=f'''🔓 I have successfully unlocked {len(ctx.emojis)} emojis\n
 ℹ️ Now everyone will be able to use the emojis''')
         view.confirm_embed.set_footer(
             text='If you can\'t use the emojis try to fully restart your Discord app')

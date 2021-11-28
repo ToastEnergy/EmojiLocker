@@ -77,8 +77,8 @@ class LockallView(BaseView):
 
     @property
     def confirm_embed(self):
-        return discord.Embed(title='Emojis succesfully locked', color=config.color,
-                             description=f'''🔓 I have succesfully locked all of your server emojis with {self.failed} failed edits.
+        return discord.Embed(title='Emojis successfully locked', color=config.color,
+                             description=f'''🔓 I have successfully locked all of your server emojis with {self.failed} failed edits.
         ℹ️ Now only the people with at least one of the roles that you specified ({','.join([r.mention for r in self.ctx.roles])}) will be able to use the emojis''').set_footer(
             text='If you can\'t use the emojis try to fully restart your Discord app')
 
@@ -227,8 +227,8 @@ class MassUnlockSelectView(BaseView):
 
     @property
     def confirm_embed(self):
-        return discord.Embed(title='Emojis succesfully unlocked', color=config.color,
-                             description=f'''🔓 I have succesfully unlocked {self.successful} emojis with {self.failed} failed edits.\n
+        return discord.Embed(title='Emojis successfully unlocked', color=config.color,
+                             description=f'''🔓 I have successfully unlocked {self.successful} emojis with {self.failed} failed edits.\n
 ℹ️ Now everyone will be able to use these emojis in your server''').set_footer(
             text='If you can\'t use the emojis try to fully restart your Discord app')
 
@@ -277,8 +277,8 @@ if you select **overwrite** it will be locked only to the roles that you just sp
 
     @property
     def confirm_embed(self):
-        return discord.Embed(title='Emojis succesfully locked', color=config.color,
-                             description=f'''🔓 I have succesfully locked {self.successful} emojis with {self.failed} failed edits.\n
+        return discord.Embed(title='Emojis successfully locked', color=config.color,
+                             description=f'''🔓 I have successfully locked {self.successful} emojis with {self.failed} failed edits.\n
 ℹ️ Now only the people with at least one of the roles that you specified ({','.join([r.mention for r in self.ctx.roles])}) will be able to use the emojis''').set_footer(
             text='If you can\'t use the emojis try to fully restart your Discord app')
 

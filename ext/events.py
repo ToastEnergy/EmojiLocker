@@ -64,7 +64,7 @@ class Events(commands.Cog):
         emb.set_author(name=str(ctx.author),
                        icon_url=str(ctx.author.display_avatar))
         color = discord.Color.red()
-        UNKNOWN_ERROR = f'An unhandled error occured, please report this to the developers. Error code : `{self.bot.tid}`'
+        UNKNOWN_ERROR = f'An unhandled error occurred, please report this to the developers. Error code : `{self.bot.tid}`'
         self.bot.tracebacks[self.bot.tid] = traceback_
         self.bot.tid += 1
         base_error = errors.get(type(error))
