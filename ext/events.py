@@ -128,8 +128,9 @@ class Events(commands.Cog):
     async def on_guild_join(self, guild : discord.Guild):
         owner = await self.bot.fetch_user(guild.owner_id)
         emb = discord.Embed(title='New Server', color=config.color)
-        emb.set_author(name=guild.name, icon_url=str(guild.icon))
-        emb.set_thumbnail(url=str(guild.icon))
+        emb.set_author(name=guild.name)
+        if guild.icon:
+            emb.set_thumbnail(url=str(guild.icon))
         emb.add_field(name='ID', value=f'`{guild.id}`')
         emb.add_field(name='Members', value=guild.member_count)
         emb.add_field(name='Owner', value=f'`{str(owner)}` (`{owner.id}`)', inline=False)
@@ -140,8 +141,9 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
         emb = discord.Embed(title="Left a server", colour=config.color_red)
-        emb.set_author(name=guild.name, icon_url=str(guild.icon))
-        emb.set_thumbnail(url=str(guild.icon))
+        emb.set_author(name=guild.name)
+        if guild.icon:
+            emb.set_thumbnail(url=str(guild.icon))
         emb.add_field(name="ID", value=f"`{guild.id}`")
         emb.add_field(name="Members", value=guild.member_count)
         emb.add_field(name="Owner", value=f"`{guild.owner_id}`", inline=False)
