@@ -2,6 +2,7 @@
 
 no_embeds_message = "I don't have the **embed links** permission, so this message could be incomplete. Please give me the embed links permissions (check also channel side permissions)"
 prefix = "e!"
+status = "Update released! e!help"
 
 color = 0x2bcba2
 color_red = 0xff0004
