@@ -89,7 +89,10 @@ class Events(commands.Cog):
                              icon_url=str(ctx.author.display_avatar))
         emb.color = color
         await self.webhook.send(f'Traceback ID : {self.bot.tid}', embed=emb)
-        ctx.sent_message = await ctx.reply_embed(embed=ctx.embed, view=views.SupportView(ctx))
+        try:
+            ctx.sent_message = await ctx.reply_embed(embed=ctx.embed, view=views.SupportView(ctx))
+        except discord.errors.Forbidden:
+            pass
 
     @commands.command(hidden=True)
     @commands.is_owner()
