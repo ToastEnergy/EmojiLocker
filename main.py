@@ -58,7 +58,7 @@ usage : {x.usage}
         embed.set_footer(text='Made with ♥ by Toast Energy')
         self.start_embed = embed
         view = views.OwnView(self.context)
-        entries = [self.context.bot.get_cog(cog) for cog in self.context.bot.cogs if cog not in ['Jishaku', 'Events']]
+        entries = [self.context.bot.get_cog(cog) for cog in self.context.bot.cogs if cog not in ['Jishaku', 'Events', 'BotLists']]
         view.add_item(views.HelpSelect(self, entries))
         await self.context.reply_embed(embed=embed, view=view)
 

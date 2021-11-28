@@ -24,6 +24,11 @@ class Meta(commands.Cog):
             content=f':ping_pong: **Pong!** : {round(duration)}ms\n:ping_pong: **Latency** : {round(self.bot.latency * 1000)}ms')
 
     @commands.command()
+    async def vote(self, ctx):
+        """Upvote the bot"""
+        await ctx.send("Do you like the bot? Upvote it at https://top.gg/bot/609087387695316992")
+
+    @commands.command()
     async def invite(self, ctx):
         """Get a quick invite for the bot"""
         url = discord.utils.oauth_url(self.bot.user.id, permissions=discord.Permissions(1074023424), scopes=['bot',
@@ -31,7 +36,7 @@ class Meta(commands.Cog):
         view = discord.ui.View()
         button = discord.ui.Button(style=discord.ButtonStyle.url,label="Invite",url=url)
         view.add_item(button)
-        await ctx.send(embed=discord.Embed(title='Thanks for using Emoji Locker!'), view=view)
+        await ctx.reply_embed(embed=discord.Embed(title='Thanks for using Emoji Locker!'), view=view)
 
 
 def setup(bot):
