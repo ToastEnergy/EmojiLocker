@@ -403,7 +403,7 @@ As you can see from this gif, the locked emojis completely disappear from the em
                 discord.Embed(title="Basics", description=f'''
 The **unlock** command disables the whitelist for an emoji, so everyone will be able to use it.
 
-The command also have a **non-interactive** version, `{_help.context.prefix}unlock <emoji>` (don't actually type <>)
+The command also has a **non-interactive** version, `{_help.context.prefix}unlock <emoji>` (don't actually type <>)
 
 Its usage is very similar to the lock command, just run `{_help.context.prefix}unlock` and follow the steps in the gif below.
 ''', color=config.color).set_image(url='https://i.imgur.com/aNFtNcC.gif')
@@ -419,27 +419,27 @@ If you have to lock/unlock multiple emojis or even all of your server emojis you
 Learn more about these commands in the next pages
 ''', color=config.color),
              discord.Embed(title='Bulk commands | lockall', description=f'''
-The `lockall` command locks every emoji of the server for you, you can run it without arguments (**guided mode**) or by specifying the roles (**manual mode**)
+The `lockall` command locks every emoji of the server for you. You can run it in **guided mode** or by specifying the roles (**manual mode**).
 
-If you want to use it in **guided mode** just run `{_help.context.prefix}lockall` and follow the interactive setup
+If you want to use it in **guided mode** just run `{_help.context.prefix}lockall` and follow the interactive setup.
 
-If you don't want to follow the interactive setup use the **manual mode** by running `{_help.context.prefix}lockall @role1 "Role 2" @role3`, as you can see you can pass the mention and the role name, if the name has spaces in it, put it in quotes.
+If you don't want to follow the interactive setup use the **manual mode** by running `{_help.context.prefix}lockall @role1 "Role 2" @role3`, as you can see you can pass both the mention and the role name, if the name has spaces in it, put it in quotes.
 The roles passed will be the roles to which every emoji of the server will be whitelisted.
 ''', color=config.color).set_image(url='https://i.imgur.com/l0rWqV5.gif'),
              discord.Embed(title='Bulk commands | unlockall', description=f'''
-`unlockall` unlocks every emoji of the server, making the available to everyone
+`unlockall` unlocks every emoji of the server, making them available to everyone
 
 To run it, just type `{_help.context.prefix}unlockall` and click the confirm button
 ''', color=config.color).set_image(url='https://i.imgur.com/1aDH75A.gif'),
              discord.Embed(title='Bulk commands | multiple', description=f'''
-`multiple` allows you to lock multiple emojis to multiple roles, as the **manual** syntax can be confusing, you can use the **guided mode** as it's easier.
+`multiple` allows you to lock multiple emojis to multiple roles, as the **manual** syntax can be confusing, you can use the **guided mode** _(**recommended**)_.
 
 To run `multiple` in **guided mode**, just type `{_help.context.prefix}multiple`
 
 If you want to use the **manual mode** the syntax is the following:
-`{_help.context.prefix}multiple emoji1 :emoji2: , @role1 "role 2"`
+`{_help.context.prefix}multiple emoji1 :emoji2: , @role1 Role2`
 
-**Note that the comma is required!**
+**Note that the comma is required and role names with spaces aren't supported (you can use role IDs)**
 ''', color=config.color).set_image(url='https://i.imgur.com/DTF92b3.gif')
              ],
             [
