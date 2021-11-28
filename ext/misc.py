@@ -16,6 +16,8 @@ class Misc(commands.Cog):
         if len(ctx.guild.emojis) == 0:
             raise commands.BadArgument('There are no emojis in this server!')
 
+        return True
+
     @commands.command(usage='<emoji>')
     @commands.guild_only()
     async def emojiinfo(self, ctx, *, emoji: discord.Emoji):
