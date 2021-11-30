@@ -75,7 +75,10 @@ class EmojiContext(commands.Context):
         super().__init__(**attrs)
 
     async def reply_embed(self, *args, **kwargs):
-        return await self.send_embed(*args, **kwargs, reference=self.message)
+        if self.channel.permissions_for(self.me).read_message_history:
+            return await self.send_embed(*args, **kwargs, reference=self.message)
+        else:
+            return await self.send_embed(*args, **kwargs)
 
     async def send_embed(self, *args, **kwargs):
         if not self.channel.permissions_for(self.me).embed_links:
