@@ -23,12 +23,21 @@ class BaseView(OwnView):
         self.failed = 0
         self.overwrite_button = discord.ui.Button(label='Overwrite', style=discord.ButtonStyle.blurple)
         self.overwrite_button.callback = self.overwrite
+        self.next_button = discord.ui.Button(emoji='▶️', style=discord.ButtonStyle.grey, row=0)
+        self.next_button.callback = self.next_page
+        self.previous_button = discord.ui.Button(emoji='◀️', style=discord.ButtonStyle.grey, row=0, disabled=True)
+        self.previous_button.callback = self.previous_page
+        self.selects = []
+        self.pages = []
+        self._emojis = {}
+        self._roles = {}
+        self.selected_page = 0
 
     @discord.ui.button(label='Continue', style=discord.ButtonStyle.green)
     async def _continue(self, button, interaction):
         await interaction.response.defer()
         message = await interaction.original_message()
-        await self.do_bulk(message,True)
+        await self.do_bulk(message, True)
 
     @discord.ui.button(label='Cancel', style=discord.ButtonStyle.red)
     async def cancel(self, button, interaction):
@@ -63,6 +72,62 @@ class BaseView(OwnView):
         await interaction.response.defer()
         message = await interaction.original_message()
         await self.do_bulk(message, True)
+
+    async def next_page(self, interaction: discord.Interaction):
+        self.selected_page += 1
+        self.update_paginator()
+        await interaction.response.edit_message(view=self)
+
+    async def previous_page(self, interaction: discord.Interaction):
+        self.selected_page -= 1
+        self.update_paginator()
+        await interaction.response.edit_message(view=self)
+
+    def update_buttons(self):
+        self.previous_button.disabled = False
+        self.next_button.disabled = False
+        b1 = self.children.index(self.previous_button)
+        b2 = self.children.index(self.next_button)
+        if self.selected_page == 0:
+            self.previous_button.disabled = True
+        if self.selected_page == len(self.pages) - 1:
+            self.next_button.disabled = True
+        self.children[b1] = self.previous_button
+        self.children[b2] = self.next_button
+
+    def update_paginator(self):
+        buttons = [i for i in self.children if type(i) == discord.ui.Button]
+        self.clear_items()
+        for b in buttons:
+            self.add_item(b)
+        self.update_buttons()
+        for select in self.pages[self.selected_page]:
+            self.add_item(select)
+
+    def paginate_selects(self, kind, custom_list=None, handle_persistent=True):
+        self.selects = []
+        self.pages = []
+        self.selected_page = 0
+        if kind == "roles":
+            roles = custom_list or self.ctx.guild.roles[1:]
+            for i in range(0, len(roles), 25):
+                s = RoleSelectMenu(self.ctx, roles[i:i + 25], handle_persistent)
+                self.selects.append(s)
+                self._roles[s] = set()
+        elif kind == "emojis":
+            emojis = custom_list or self.ctx.guild.emojis
+            for i in range(0, len(emojis), 25):
+                s = EmojiSelectMenu(self.ctx, emojis[i:i + 25])
+                self.selects.append(s)
+                self._emojis[s] = set()
+
+        for select in self.selects[:4]:
+            self.add_item(select)
+        if len(self.selects) > 4:
+            for x in range(0, len(self.selects), 4):
+                self.pages.append([j for j in self.selects[x:x + 4]])
+            self.add_item(self.previous_button)
+            self.add_item(self.next_button)
 
 
 class LockallView(BaseView):
@@ -202,10 +267,7 @@ class LockAllSelectView(LockallView):
     def __init__(self, ctx):
         super().__init__(ctx)
         self._roles = {}
-        for i in range(0, len(ctx.guild.roles[1:]), 25):
-            s = RoleSelectMenu(ctx, ctx.guild.roles[1:][i:i + 25])
-            self.add_item(s)
-            self._roles[s] = set()
+        self.paginate_selects("roles")
 
 
 class MassUnlockSelectView(BaseView):
@@ -213,10 +275,7 @@ class MassUnlockSelectView(BaseView):
         super().__init__(ctx)
         self._emojis = {}
         self.children[0].callback = self.__continue
-        for i in range(0, len(ctx.locked), 25):
-            s = EmojiSelectMenu(ctx, ctx.locked[i:i + 25])
-            self.add_item(s)
-            self._emojis[s] = set()
+        self.paginate_selects("emojis", ctx.locked)
 
     async def __continue(self, interaction: discord.Interaction):
         if len(self.ctx.emojis) == 0:
@@ -237,13 +296,8 @@ class MultipleSelectView(BaseView):
     def __init__(self, ctx):
         super().__init__(ctx)
         self.step = 0
-        self._emojis = {}
-        self._roles = {}
         self.children[0].callback = self.__continue
-        for i in range(0, len(ctx.guild.emojis), 25):
-            s = EmojiSelectMenu(ctx, ctx.guild.emojis[i:i + 25])
-            self.add_item(s)
-            self._emojis[s] = set()
+        self.paginate_selects("emojis")
 
     async def __continue(self, interaction: discord.Interaction):
         if self.step == 0:
@@ -254,11 +308,7 @@ class MultipleSelectView(BaseView):
             self.add_item(self._continue)
             self.add_item(self.overwrite_button)
             self.add_item(self.cancel)
-            for i in range(0, len(self.ctx.guild.roles[1:]), 25):
-                s = RoleSelectMenu(
-                    self.ctx, self.ctx.guild.roles[1:][i:i + 25])
-                self.add_item(s)
-                self._roles[s] = set()
+            self.paginate_selects("roles")
             self.ctx.embed.description = '''
 Select the roles that will be able to use the selected emojis with the menu below, then click Keep or Overwrite
 
@@ -283,18 +333,12 @@ if you select **overwrite** it will be locked only to the roles that you just sp
             text='If you can\'t use the emojis try to fully restart your Discord app')
 
 
-class RolesView(OwnView):
+class RolesView(BaseView):
     def __init__(self, ctx):
-        self._roles = {}
         super().__init__(ctx)
+        self.remove_item(self._continue)
 
-    def add_selects(self, roles):
-        for i in range(0, len(roles), 25):
-            s = RoleSelectMenu(self.ctx, roles[i:i + 25], False)
-            self.add_item(s)
-            self._roles[s] = set()
-
-    @discord.ui.button(label='Add', style=discord.ButtonStyle.green)
+    @discord.ui.button(label='Add', style=discord.ButtonStyle.green,row=0)
     async def add(self, button, interaction):
         self.ctx.embed.description = 'You are adding some persistent roles, select them with the menu below then click continue'
         self.ctx.roles = set()
@@ -304,9 +348,9 @@ class RolesView(OwnView):
             alr_added = set()
         else:
             alr_added = set(self.ctx.data)
-        self.add_selects(list(set(self.ctx.guild.roles[1:]) - alr_added))
+        self.paginate_selects("roles", list(set(self.ctx.guild.roles[1:]) - alr_added), False)
         cont = discord.ui.Button(
-            style=discord.ButtonStyle.green, label='Continue')
+            style=discord.ButtonStyle.green, label='Continue', row=0)
         cont.callback = self.add_roles
         self.add_item(cont)
         await interaction.response.edit_message(view=self, embed=self.ctx.embed)
@@ -345,7 +389,7 @@ class RolesView(OwnView):
             self.ctx.embed.description = f'The persistent roles for this server are {", ".join(map(lambda r: r.mention, self.ctx.data))}'
         await interaction.followup.edit_message(message_id=interaction.message.id, view=self, embed=self.ctx.embed)
 
-    @discord.ui.button(label='Remove', style=discord.ButtonStyle.blurple)
+    @discord.ui.button(label='Remove', style=discord.ButtonStyle.blurple,row=0)
     async def remove(self, button, interaction):
         self.ctx.embed.description = 'You are removing some persistent roles, select them with the menu below then click continue'
         self.ctx.roles = set()
@@ -353,17 +397,12 @@ class RolesView(OwnView):
         self.remove_item(self.add)
         if not self.ctx.data:
             return await interaction.response.send_message('No roles to remove!', ephemeral=True)
-        self.add_selects(self.ctx.data)
         cont = discord.ui.Button(
-            style=discord.ButtonStyle.green, label='Continue')
+            style=discord.ButtonStyle.green, label='Continue', row=0)
         cont.callback = self.remove_roles
         self.add_item(cont)
+        self.paginate_selects("roles", self.ctx.data, False)
         await interaction.response.edit_message(view=self, embed=self.ctx.embed)
-
-    @discord.ui.button(label='Cancel', style=discord.ButtonStyle.red)
-    async def cancel(self, button, interaction):
-        await interaction.response.edit_message(content='Cancelled.', embed=None, view=None)
-        self.stop()
 
 
 class HelpSelect(discord.ui.Select):
