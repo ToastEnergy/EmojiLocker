@@ -17,7 +17,8 @@ class BotLists(commands.Cog):
             payload = {"server_count": len(self.bot.guilds), "shard_count": len(self.bot.shards)}
             headers = {"Authorization": config.DBL_TOKEN}
             r = await self.bot.session.post(self.topgg, data=payload, headers=headers)
-            print(f"Server count posted to top.gg with status code {r.status}")
+            t = await r.text()
+            print(f"Server count posted to top.gg with status code {r.status} {t}")
         except:
             print("Failed to post server count to top.gg")
 
@@ -25,7 +26,8 @@ class BotLists(commands.Cog):
             payload = {"guildCount": len(self.bot.guilds), "shardCount": len(self.bot.shards)}
             headers = {"Authorization": config.DBOTS_TOKEN}
             r = await self.bot.session.post(self.dbots, data=payload, headers=headers)
-            print(f"Server count posted to discord.bots.gg with status code {r.status}")
+            t = await r.text()
+            print(f"Server count posted to discord.bots.gg with status code {r.status} {t}")
         except:
             print("Failed to post server count to discord.bots.gg")
 
