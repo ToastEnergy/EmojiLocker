@@ -60,6 +60,9 @@ usage : {x.usage}
         view = views.OwnView(self.context)
         entries = [self.context.bot.get_cog(cog) for cog in self.context.bot.cogs if cog not in ['Jishaku', 'Events', 'BotLists']]
         view.add_item(views.HelpSelect(self, entries))
+        button = discord.ui.Button(
+            style=discord.ButtonStyle.url, url="https://top.gg/bot/609087387695316992/vote", label='Upvote the bot')
+        view.add_item(button)
         await self.context.reply_embed(embed=embed, view=view)
 
     async def send_command_help(self, command):
