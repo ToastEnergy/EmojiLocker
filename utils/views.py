@@ -1,7 +1,15 @@
 import asyncpg
 import config
 import discord
-from discord.ext import commands
+
+
+class UpvoteView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=0)
+        button = discord.ui.Button(
+            style=discord.ButtonStyle.url, url="https://top.gg/bot/609087387695316992/vote", label='Upvote the bot')
+        self.add_item(button)
+        self.stop()
 
 
 class OwnView(discord.ui.View):
@@ -60,9 +68,9 @@ class BaseView(OwnView):
                     self.failed += 1
                 i += 1
                 await message.edit(content=f'{i}/{len(self.ctx.emojis)}')
-            await message.edit(content=None, embed=self.confirm_embed)
+            await message.edit(content=None, embed=self.confirm_embed, view=UpvoteView())
         except Exception as e:
-            raise
+            raise e
         finally:
             self.stop()
 
