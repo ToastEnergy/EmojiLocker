@@ -1,4 +1,4 @@
-import aiohttp
+import asyncio
 import discord
 from discord.ext import commands, tasks
 import config
@@ -13,6 +13,7 @@ class BotLists(commands.Cog):
 
     @tasks.loop(minutes=30)
     async def autopost(self):
+        await asyncio.sleep(30)  # bot hasn't finished initialization for some reasons
         try:
             payload = {"server_count": len(self.bot.guilds), "shard_count": len(self.bot.shards)}
             headers = {"Authorization": config.DBL_TOKEN}
