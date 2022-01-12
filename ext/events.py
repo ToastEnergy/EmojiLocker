@@ -55,7 +55,8 @@ class Events(commands.Cog):
                 name='Channel', value=f'`#{ctx.channel.name}` (`{ctx.channel.id}`)', inline=False)
             emb.add_field(
                 name='Guild', value=f'`{ctx.guild.name}` (`{ctx.guild.id}`)', inline=False)
-            emb.set_thumbnail(url=str(ctx.guild.icon))
+            if ctx.guild.icon:
+                emb.set_thumbnail(url=str(ctx.guild.icon))
         else:
             emb.add_field(name='Channel', value=f'`DM Channel`', inline=False)
         time = round(datetime.timestamp(datetime.now()))
