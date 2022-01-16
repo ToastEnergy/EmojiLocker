@@ -79,7 +79,10 @@ class EmojiContext(commands.Context):
 
     async def reply_embed(self, *args, **kwargs):
         if self.channel.permissions_for(self.me).read_message_history:
-            return await self.send_embed(*args, **kwargs, reference=self.message)
+            try:
+                return await self.send_embed(*args, **kwargs, reference=self.message)
+            except discord.errors.HTTPException:
+                return await self.send_embed(*args, **kwargs)
         else:
             return await self.send_embed(*args, **kwargs)
 
