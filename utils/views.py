@@ -35,6 +35,7 @@ class BaseView(OwnView):
         self.next_button.callback = self.next_page
         self.previous_button = discord.ui.Button(emoji='◀️', style=discord.ButtonStyle.grey, row=0, disabled=True)
         self.previous_button.callback = self.previous_page
+        self.remove_item(self.toggle_persistent)
         self.selects = []
         self.pages = []
         self._emojis = {}
@@ -51,6 +52,23 @@ class BaseView(OwnView):
     async def cancel(self, button, interaction):
         await interaction.response.edit_message(content='Cancelled.', embed=None, view=None)
         self.stop()
+
+    @discord.ui.button(label="Remove persistent", style=discord.ButtonStyle.red)
+    async def toggle_persistent(self, button, interaction):
+        if button.label == "Remove persistent":
+            print(f"ctx.roles : {self.ctx.roles}")
+            print(f"ctx.persistent : {self.ctx.persistent}")
+            self.ctx._og_persistent = self.ctx.persistent
+            self.ctx.persistent = set()
+            print(f"ctx.roles after : {self.ctx.roles}")
+            button.label = "Add persistent"
+            button.style = discord.ButtonStyle.green
+        else:
+            self.ctx.persistent = self.ctx._og_persistent
+            button.label = "Remove persistent"
+            button.style = discord.ButtonStyle.red
+        await interaction.response.edit_message(view=self)
+
 
     async def do_bulk(self, message, overwrite=False):
         try:
@@ -305,6 +323,7 @@ class MultipleSelectView(BaseView):
         super().__init__(ctx)
         self.step = 0
         self.children[0].callback = self.__continue
+        self.add_item(self.toggle_persistent)
         self.paginate_selects("emojis")
 
     async def __continue(self, interaction: discord.Interaction):
