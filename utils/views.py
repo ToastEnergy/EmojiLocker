@@ -56,11 +56,8 @@ class BaseView(OwnView):
     @discord.ui.button(label="Remove persistent", style=discord.ButtonStyle.red)
     async def toggle_persistent(self, button, interaction):
         if button.label == "Remove persistent":
-            print(f"ctx.roles : {self.ctx.roles}")
-            print(f"ctx.persistent : {self.ctx.persistent}")
             self.ctx._og_persistent = self.ctx.persistent
             self.ctx.persistent = set()
-            print(f"ctx.roles after : {self.ctx.roles}")
             button.label = "Add persistent"
             button.style = discord.ButtonStyle.green
         else:
