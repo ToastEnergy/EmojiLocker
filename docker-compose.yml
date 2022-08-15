@@ -1,0 +1,20 @@
+services:
+  bot:
+    restart: always
+    build: .
+    volumes:
+      - ./config.py:/app/config.py
+    links:
+      - postgres
+
+  postgres:
+    restart: always
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
