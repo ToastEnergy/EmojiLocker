@@ -26,8 +26,8 @@ import itertools
 import config
 import discord
 from discord.ext import commands
-from utils import views
-
+from discord import app_commands
+from utils.lockviews import PacksView
 
 class Misc(commands.Cog):
     def __init__(self, bot):
@@ -41,10 +41,15 @@ class Misc(commands.Cog):
 
         return True
 
-    @commands.command(usage='<emoji>')
+    @app_commands.command(name="emojiinfo")
+    @app_commands.rename(emoji_str="emoji")
+    @app_commands.describe(emoji_str="The emoji to get info on")
+    @app_commands.guilds(discord.Object(id=876848789531549786))
     @commands.guild_only()
-    async def emojiinfo(self, ctx, *, emoji: discord.Emoji):
+    async def emojiinfo(self, interaction:discord.Interaction, emoji_str: str):
         """Get info about an emoji"""
+        ctx = await commands.Context.from_interaction(interaction)
+        emoji = await commands.EmojiConverter().convert(ctx, emoji_str)
         embed = discord.Embed(title=emoji.name)
         embed.color = config.color
         embed.set_thumbnail(url=str(emoji.url))
@@ -58,39 +63,40 @@ class Misc(commands.Cog):
 **Created at** : {emoji.created_at.strftime("%m/%d/%Y, %H:%M:%S")}
 **Download link** : [Click here]({str(emoji.url)})
         '''
-        await ctx.reply_embed(embed=embed)
+        await interaction.response.send_message(embed=embed)
 
-    @commands.command(aliases=["packs"])
+    @app_commands.command(name="emojis")
+    @app_commands.guilds(discord.Object(id=876848789531549786), discord.Object(id=747524774569443429))
     @commands.max_concurrency(3, commands.BucketType.user)
-    async def emojis(self, ctx):
+    async def emojis(self, interaction: discord.Interaction):
         """List all the server emojis grouped by roles"""
-        ctx.packs = []
-        ctx.keys = []
+        packs = []
+        keys = []
         def func(x): return x.roles
-        for k, g in itertools.groupby(sorted(ctx.guild.emojis, key=func), func):
-            ctx.packs.append(list(g))
-            ctx.keys.append(k)
+        for k, g in itertools.groupby(sorted(interaction.guild.emojis, key=func), func):
+            packs.append(list(g))
+            keys.append(k)
 
-        ctx.embed = discord.Embed(
+        embed = discord.Embed(
             title='Packs', color=config.color)
-        ctx.paginator = commands.Paginator(prefix='', suffix='', linesep='')
+        paginator = commands.Paginator(prefix='', suffix='', linesep='')
         c = 0
-        for x in ctx.packs:
-            ctx.paginator.add_line('\n\n')
-            ctx.paginator.add_line(
-                f"> **{(', '.join([role.name for role in ctx.keys[c]])) or '@everyone'}**")
+        for x in packs:
+            paginator.add_line('\n\n')
+            paginator.add_line(
+                f"> **{(', '.join([role.name for role in keys[c]])) or '@everyone'}**")
             c += 1
-            ctx.paginator.add_line('\n')
+            paginator.add_line('\n')
             for em in x:
-                ctx.paginator.add_line(f"{em} ")
-        ctx.embed.description = ctx.paginator.pages[0]
-        ctx.embed.set_footer(text=f'Page 1/{len(ctx.paginator.pages)}')
-        view = views.PacksView(ctx)
-        if len(ctx.paginator.pages) > 1:
-            ctx.sent_message = await ctx.reply_embed(embed=ctx.embed, view=view)
+                paginator.add_line(f"{em} ")
+        embed.description = paginator.pages[0]
+        embed.set_footer(text=f'Page 1/{len(paginator.pages)}')
+        if len(paginator.pages) > 1:
+            view = PacksView(author_id=interaction.user.id, paginator=paginator, embed=embed)
+            await interaction.response.send_message(embed=embed, view=view)
             return await view.wait()
         else:
-            ctx.sent_message = await ctx.reply_embed(embed=ctx.embed)
+            await interaction.response.send_message(embed=embed)
 
 
 async def setup(bot):
