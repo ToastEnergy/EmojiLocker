@@ -176,12 +176,12 @@ class EmojiLocker(commands.AutoShardedBot):
         else:
             return commands.when_mentioned_or(data.get('prefix')+' ', data.get('prefix'))(bot, message)
 
-    async def get_persistent_roles(self, ctx):
-        data = await self.db.get_roles(ctx.guild.id)
+    async def get_persistent_roles(self, guild: discord.Guild):
+        data = await self.db.get_roles(guild.id)
         res = list()
         to_remove = list()
         for role in data:
-            resolved_role = ctx.guild.get_role(role['role_id'])
+            resolved_role = guild.get_role(role['role_id'])
             if resolved_role:
                 res.append(resolved_role)
             else:

@@ -28,6 +28,8 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from utils.lockviews import PacksView
+from utils.checks import guild_with_emoji_only
+from utils.transformers import EmojiTransformer
 
 class Misc(commands.Cog):
     def __init__(self, bot):
@@ -42,14 +44,13 @@ class Misc(commands.Cog):
         return True
 
     @app_commands.command(name="emojiinfo")
-    @app_commands.rename(emoji_str="emoji")
-    @app_commands.describe(emoji_str="The emoji to get info on")
+    @app_commands.guild_only()
+    @app_commands.describe(emoji="The emoji to get info on")
     @app_commands.guilds(discord.Object(id=876848789531549786))
+    @app_commands.check(guild_with_emoji_only)
     @commands.guild_only()
-    async def emojiinfo(self, interaction:discord.Interaction, emoji_str: str):
+    async def emojiinfo(self, interaction:discord.Interaction, emoji: app_commands.Transform[discord.Emoji, EmojiTransformer]):
         """Get info about an emoji"""
-        ctx = await commands.Context.from_interaction(interaction)
-        emoji = await commands.EmojiConverter().convert(ctx, emoji_str)
         embed = discord.Embed(title=emoji.name)
         embed.color = config.color
         embed.set_thumbnail(url=str(emoji.url))
@@ -66,14 +67,15 @@ class Misc(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="emojis")
+    @app_commands.guild_only()
     @app_commands.guilds(discord.Object(id=876848789531549786), discord.Object(id=747524774569443429))
-    @commands.max_concurrency(3, commands.BucketType.user)
+    @app_commands.check(guild_with_emoji_only)
     async def emojis(self, interaction: discord.Interaction):
         """List all the server emojis grouped by roles"""
         packs = []
         keys = []
         def func(x): return x.roles
-        for k, g in itertools.groupby(sorted(interaction.guild.emojis, key=func), func):
+        for k, g in itertools.groupby(sorted(interaction.guild.emojis, key=func), func): # type: ignore
             packs.append(list(g))
             keys.append(k)
 

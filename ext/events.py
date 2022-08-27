@@ -29,7 +29,8 @@ import config
 import discord
 from discord import app_commands
 from discord.ext import commands
-from utils import views, owner_only
+from utils import views
+from utils.checks import owner_only
 
 # True means that we like the libs error message
 errors = {
@@ -65,6 +66,10 @@ class Events(commands.Cog):
     async def on_command_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
         if isinstance(error, commands.CommandNotFound):
             return
+        if not interaction.command:
+            return
+        if not interaction.guild:
+            return
         traceback_ = traceback.format_exception(
             type(error), error, error.__traceback__)
         invoke = f"/{interaction.command.name} {interaction.namespace}"
@@ -76,7 +81,7 @@ class Events(commands.Cog):
         emb.add_field(
             name='Author', value=f'`{str(interaction.user)}` (`{interaction.user.id}`)', inline=False)
         emb.add_field(
-            name='Channel', value=f'`#{interaction.channel.name}` (`{interaction.channel.id}`)', inline=False)
+            name='Channel', value=f'`#{interaction.channel.name}` (`{interaction.channel.id}`)', inline=False) # type: ignore
         emb.add_field(
             name='Guild', value=f'`{interaction.guild.name}` (`{interaction.guild.id}`)', inline=False)
         if interaction.guild.icon:
@@ -90,12 +95,15 @@ class Events(commands.Cog):
         UNKNOWN_ERROR = f'An unhandled error occurred, please report this to the developers. Error code : `{self.bot.tid}`'
         self.bot.tracebacks[self.bot.tid] = traceback_
         self.bot.tid += 1
-        error = error.original
-        base_error = errors.get(type(error))
+        if isinstance(error, app_commands.TransformerError):
+            error = error.__cause__ # type: ignore
+        elif isinstance(error, app_commands.AppCommandError):
+            error = error.original # type: ignore
+        base_error = errors.get(type(error)) # type: ignore
         if base_error is True:
             description = str(error)
         elif base_error is None:
-            parent_err = errors.get(type(error).__bases__[0])
+            parent_err = errors.get(type(error).__bases__[0]) # type: ignore
             if parent_err is True:
                 description = str(error)
             elif parent_err is None:
@@ -137,10 +145,11 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_app_command_completion(self, interaction: discord.Interaction, command: Union[discord.app_commands.Command, discord.app_commands.ContextMenu]):
         message = await interaction.original_response()
-
-        emb = discord.Embed(description=f"**`/{command.name}`**\n\n**message id**: `{message.id}`\n**{str(interaction.user)}** (`{interaction.user.id}`)\n**#{interaction.channel.name}** (`{interaction.channel.id}`)\n**{interaction.guild.name}** (`{interaction.guild.id}`)\n\n<t:{int(datetime.now().timestamp())}:f>", color=config.color)
+        if not interaction.guild:
+            return
+        emb = discord.Embed(description=f"**`/{command.name}`**\n\n**message id**: `{message.id}`\n**{str(interaction.user)}** (`{interaction.user.id}`)\n**#{interaction.channel.name}** (`{interaction.channel.id}`)\n**{interaction.guild.name}** (`{interaction.guild.id}`)\n\n<t:{int(datetime.now().timestamp())}:f>", color=config.color) # type: ignore
         emb.set_author(name=str(interaction.user), icon_url=interaction.user.avatar)
-        emb.set_thumbnail(url=interaction.guild.icon)
+        emb.set_thumbnail(url=interaction.guild.icon) 
         await self.commands_webhook.send(embed=emb)
 
     @commands.Cog.listener()
