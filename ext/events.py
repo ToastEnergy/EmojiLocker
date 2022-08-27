@@ -180,5 +180,5 @@ class Events(commands.Cog):
         await self.guilds_webhook.send(embed=emb)
 
 
-def setup(bot):
-    bot.add_cog(Events(bot))
+async def setup(bot):
+    await bot.add_cog(Events(bot))

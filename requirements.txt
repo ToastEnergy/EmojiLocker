@@ -1,3 +1,3 @@
-git+https://github.com/Rapptz/discord.py#egg=discord.py
-git+https://github.com/Gorialis/jishaku#egg=jishaku
-asyncpg
+discord.py==2.0.0   
+jishaku==2.5.1
+asyncpg==0.26.0

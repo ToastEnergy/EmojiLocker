@@ -59,5 +59,5 @@ class BotLists(commands.Cog):
         self.autopost.cancel()
 
 
-def setup(bot):
-    bot.add_cog(BotLists(bot))
+async def setup(bot):
+    await bot.add_cog(BotLists(bot))

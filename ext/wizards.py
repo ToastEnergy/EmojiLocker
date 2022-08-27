@@ -93,5 +93,5 @@ if you select **overwrite** it will be locked only to the roles that you just sp
         await view.wait()
 
 
-def setup(bot):
-    bot.add_cog(Wizards(bot))
+async def setup(bot):
+    await bot.add_cog(Wizards(bot))

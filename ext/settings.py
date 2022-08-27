@@ -148,5 +148,5 @@ Use `{ctx.prefix}settings <setting>` to change a setting
         await message.edit(f'Updated {len(emojis)} emojis.')
 
 
-def setup(bot):
-    bot.add_cog(Settings(bot))
+async def setup(bot):
+    await bot.add_cog(Settings(bot))

@@ -62,5 +62,5 @@ class Meta(commands.Cog):
         await ctx.reply_embed(embed=discord.Embed(title='Thanks for using Emoji Locker!'), view=view)
 
 
-def setup(bot):
-    bot.add_cog(Meta(bot))
+async def setup(bot):
+    await bot.add_cog(Meta(bot))

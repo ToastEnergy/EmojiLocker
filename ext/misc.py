@@ -93,5 +93,5 @@ class Misc(commands.Cog):
             ctx.sent_message = await ctx.reply_embed(embed=ctx.embed)
 
 
-def setup(bot):
-    bot.add_cog(Misc(bot))
+async def setup(bot):
+    await bot.add_cog(Misc(bot))

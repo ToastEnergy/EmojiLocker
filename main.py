@@ -46,6 +46,7 @@ If you need any help join the **[support server](https://discord.gg/TaJubW7)**
 **[Top.gg](https://top.gg/bot/609087387695316992/)**
 '''
 
+INTENTS = discord.Intents.default()
 
 class LockHelp(commands.HelpCommand):
     def __init__(self):
@@ -124,8 +125,7 @@ class EmojiContext(commands.Context):
 
 class EmojiLocker(commands.AutoShardedBot):
     def __init__(self):
-        super().__init__(command_prefix=self.get_custom_prefix, case_insensitive=True, activity=discord.Game(name=config.status))
-        self.load_extension('jishaku')
+        super().__init__(command_prefix=self.get_custom_prefix, case_insensitive=True, activity=discord.Game(name=config.status), intents=INTENTS)
         self.allowed_mentions = discord.AllowedMentions(
             everyone=False, replied_user=True, roles=False, users=False
         )
@@ -154,14 +154,15 @@ class EmojiLocker(commands.AutoShardedBot):
     async def get_context(self, message, *, cls=EmojiContext):
         return await super().get_context(message, cls=cls)
 
+    async def setup_hook(self):
+        await self.load_extension('jishaku')
+        for filename in os.listdir('./ext'):
+            if filename.endswith('.py') and not filename.startswith('_'):
+                await self.load_extension(f'ext.{filename[:-3]}')
+                print(f'Loaded {filename}')
+
     async def on_ready(self):
         print(f'logged in as {self.user}')
-        if self.first_ready:
-            self.first_ready = False
-            for filename in os.listdir('./ext'):
-                if filename.endswith('.py') and not filename.startswith('_'):
-                    self.load_extension(f'ext.{filename[:-3]}')
-                    print(f'Loaded {filename}')
 
     async def get_custom_prefix(self, bot, message):
         if not message.guild:
