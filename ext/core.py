@@ -27,9 +27,10 @@ import config
 import discord
 from discord import app_commands
 from discord.ext import commands
-from utils import views
 from typing import Optional
-from utils.transformers import EmojiTransformer
+from utils.views import ConfirmView
+from utils.transformers import EmojiTransformer, RoleTransformer
+from utils.autocompletes import emoji_autocomplete
 
 class Core(commands.Cog):
     def __init__(self, bot):
@@ -38,17 +39,12 @@ class Core(commands.Cog):
     @app_commands.command(name="lock")
     @app_commands.default_permissions(manage_emojis=True)
     @app_commands.guild_only()
+    @app_commands.autocomplete(emoji=emoji_autocomplete)
     @app_commands.describe(emoji="The emoji to lock", role="The role to lock the emoji to")
     @app_commands.guilds(discord.Object(id=876848789531549786), discord.Object(id=747524774569443429))
-    async def lock(self, interaction: discord.Interaction, emoji: Optional[app_commands.Transform[discord.Emoji, EmojiTransformer]], role: Optional[discord.Role]):
+    async def lock(self, interaction: discord.Interaction, emoji: app_commands.Transform[discord.Emoji, EmojiTransformer], role: discord.Role):
         """Lock an emoji, making it available only to the roles specified and the persistent roles"""
         await interaction.response.defer()
-        if not emoji:
-            return
-            # interactive locking
-        if not role:
-            raise commands.MissingRequiredArgument(inspect.Parameter(
-                name='roles', kind=inspect.Parameter.POSITIONAL_ONLY)) # type: ignore
         if emoji.guild != interaction.guild:
             return await interaction.followup.send('This emoji appears to be from another server')
         persistent = await self.bot.get_persistent_roles(interaction.guild)
@@ -68,68 +64,73 @@ class Core(commands.Cog):
         embed.set_thumbnail(url=emoji.url)
         await interaction.followup.send(embed=embed)
 
-    @commands.command(usage="<emoji>")
-    @commands.max_concurrency(5, commands.BucketType.user)
-    async def unlock(self, ctx, emoji: discord.Emoji = None):
+    @app_commands.command(name="unlock")
+    @app_commands.default_permissions(manage_emojis=True)
+    @app_commands.guild_only()
+    @app_commands.autocomplete(emoji=emoji_autocomplete)
+    @app_commands.describe(emoji="The emoji to unlock")
+    @app_commands.guilds(discord.Object(id=876848789531549786), discord.Object(id=747524774569443429))
+    async def unlock(self, interaction: discord.Interaction, emoji: app_commands.Transform[discord.Emoji, EmojiTransformer]):
         """Unlock an emoji, making it available to everyone"""
-        if not emoji:
-            return await self.bot.get_command('wizard unlock').__call__(ctx)
-
-        if emoji.guild != ctx.guild:
-            return await ctx.reply('This emoji appears to be from another server')
+        if emoji.guild != interaction.guild:
+            return await interaction.response.send_message('This emoji appears to be from another server')
 
         await emoji.edit(name=emoji.name, roles=[])
 
         description = f'''
 🔒 I have successfully unlocked the '{emoji.name}' emoji.\n
 ℹ️ Now everyone will be able to use the emoji'''
-        if not ctx.channel.permissions_for(ctx.guild.me).embed_links:
-            return await ctx.reply(
-                description + '\n\nPlease consider giving me the embed links permissions to see nicer messages')
 
-        embed = discord.Embed(title='Emoji successfully locked',
+        embed = discord.Embed(title='Emoji successfully unlocked',
                               description=description, color=config.color)
         embed.set_footer(
             text="If you can't use the emoji try to fully restart your Discord app")
         embed.set_thumbnail(url=emoji.url)
-        await ctx.reply_embed(embed=embed)
+        await interaction.response.send_message(embed=embed)
 
-    @commands.command()
-    @commands.max_concurrency(5, commands.BucketType.user)
-    async def unlockall(self, ctx):
+    @app_commands.command(name="unlockall")
+    @app_commands.default_permissions(manage_emojis=True)
+    @app_commands.guild_only()
+    @app_commands.guilds(discord.Object(id=876848789531549786), discord.Object(id=747524774569443429))
+    async def unlockall(self, interaction: discord.Interaction):
         """Unlock every emoji in the server, making them available to everyone"""
-        ctx.emojis = [
-            emoji for emoji in ctx.guild.emojis if len(emoji.roles) > 0]
-        ctx.roles = []
-        if len(ctx.emojis) == 0:
-            return await ctx.reply('There are no locked emojis.')
+        emojis = [
+            emoji for emoji in interaction.guild.emojis if len(emoji.roles) > 0] # type: ignore
+        if len(emojis) == 0:
+            return await interaction.response.send_message('There are no locked emojis.')
         embed = discord.Embed(title='Unlocking all emojis!',
-                              description=f'You are about to unlock {len(ctx.emojis)} emojis, continue?',
+                              description=f'You are about to unlock {len(emojis)} emojis, continue?',
                               color=discord.Color.red())
-        view = views.BaseView(ctx)
-        view.confirm_embed = discord.Embed(title='Emojis successfully unlocked', color=config.color,
+        confirm_embed = discord.Embed(title='Emojis successfully unlocked', color=config.color,
                                            description=f'''🔓 I have successfully unlocked all of your server emojis.\n
 ℹ️ Now everyone will be able to use all emojis in your server''').set_footer(
             text='If you can\'t use the emojis try to fully restart your Discord app')
-        await ctx.reply_embed(embed=embed, view=view)
+        view = ConfirmView(interaction.user.id)
+        await interaction.response.send_message(embed=embed, view=view)
         await view.wait()
+        if not view.result:
+            return await interaction.edit_original_response(content="Cancelled.", embed=None, view=None)
+        for emoji in emojis:
+            await emoji.edit(name=emoji.name, roles=[])
 
-    @commands.group(usage='<role> <role>...', invoke_without_command=True)
-    @commands.max_concurrency(5, commands.BucketType.user)
-    async def lockall(self, ctx, roles: commands.Greedy[discord.Role] = None):
+    @app_commands.command(name="lockall")
+    @app_commands.default_permissions(manage_emojis=True)
+    @app_commands.guild_only()
+    @app_commands.guilds(discord.Object(id=876848789531549786), discord.Object(id=747524774569443429))
+    async def lockall(self, interaction: discord.Interaction, role: app_commands.Transform[discord.Role, RoleTransformer]):
         """Lock every emoji in the server, making them available to the roles specified"""
-        if roles is None:
-            return await self.bot.get_command('wizard lockall').__call__(ctx)
+        if role is None:
+            return # interactive locking
 
         persistent = await self.bot.get_persistent_roles(ctx)
-        ctx.roles = set(roles).union(persistent)
+        roles = set([role] + persistent)
         embed = discord.Embed(title='Locking all emojis!', description='''Do you want to **keep** the roles in the existent setup or **overwrite** them?
 
 If you select **keep** an emoji already locked to @role1  will be locked to @role1 + the roles that you specified in the command
 
 if you select **overwrite** it will be locked only to the roles that you just specified.
 ''', color=config.color)
-        view = views.LockallView(ctx)
+        view = LockallView()
         await ctx.reply_embed(embed=embed, view=view)
         await view.wait()
 
@@ -153,7 +154,7 @@ if you select **overwrite** it will be locked only to the roles that you just sp
         ctx.roles = set([await commands.RoleConverter().convert(ctx, role.strip()) for role in roles if role != ""])
         persistent = await self.bot.get_persistent_roles(ctx)
         ctx.roles = set(ctx.roles).union(persistent)
-        view = views.BaseView(ctx)
+        view = BaseView(ctx)
         view.confirm_embed = discord.Embed(title='Emojis successfully locked', color=config.color,
                                            description=f'''🔓 I have successfully locked {len(ctx.emojis)} emojis\n
 ℹ️ Now only the people with at least one of the roles that you specified ({','.join([r.mention for r in ctx.roles])}) will be able to use the emojis''')

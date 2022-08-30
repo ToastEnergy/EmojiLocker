@@ -51,12 +51,28 @@ class OwnView(discord.ui.View):
      
     async def on_timeout(self):
         for x in self.children:
-            x.disabled = True
+            x.disabled = True # type: ignore
         try:
             await self.latest_interaction.edit_original_response(view=self)
         except:
             pass
 
+class ConfirmView(OwnView):
+    def __init__(self, author_id: int):
+        super().__init__(author_id)
+        self.result = None
+    
+    @discord.ui.button(label="Confirm", style=discord.ButtonStyle.green)
+    async def confirm(self, interaction: discord.Interaction, button):
+        await interaction.response.defer()
+        self.result = True
+        self.stop()
+    
+    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
+    async def cancel(self, interaction: discord.Interaction, button):
+        await interaction.response.defer()
+        self.result = False
+        self.stop()
 
 class HelpSelect(discord.ui.Select):
     def __init__(self, _help, mapping):
@@ -170,12 +186,12 @@ If you edit your persistent roles setup you may notice that previously added emo
         return self.selected_subpage + 1
 
     def update(self):
-        self.view.children[1].disabled = False
-        self.view.children[2].disabled = False
+        self.view.children[1].disabled = False # type: ignore
+        self.view.children[2].disabled = False # type: ignore
         if self.selected_subpage == 0:
-            self.view.children[1].disabled = True
+            self.view.children[1].disabled = True # type: ignore
         if self.selected_subpage == len(self.embeds[self.selected_page]) - 1:
-            self.view.children[2].disabled = True
+            self.view.children[2].disabled = True # type: ignore
 
         self.embed = self.embeds[self.selected_page][self.selected_subpage]
         self.embed.set_footer(

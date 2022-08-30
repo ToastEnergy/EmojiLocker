@@ -28,7 +28,7 @@ import config
 class Database:
     def __init__(self, bot):
         self.bot = bot
-        self.conn = None
+        self.conn : asyncpg.Connection
 
     async def connect(self):
         self.conn = await asyncpg.connect(
