@@ -159,6 +159,7 @@ class Core(commands.Cog):
     roles: app_commands.Transform[set[discord.Role], RolesTransformer],
     keep: bool=False, ignore_persistent: bool=False
     ):
+        """Lock multiple emojis to multiple roles"""
         if not ignore_persistent:
             persistent = await self.bot.get_persistent_roles(interaction.guild)
             roles = roles.union(persistent)
