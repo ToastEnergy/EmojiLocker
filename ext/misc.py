@@ -38,7 +38,6 @@ class Misc(commands.Cog):
     @app_commands.command(name="emojiinfo")
     @app_commands.guild_only()
     @app_commands.describe(emoji="The emoji to get info on")
-    @app_commands.guilds(discord.Object(id=876848789531549786))
     @app_commands.check(guild_with_emoji_only)
     @commands.guild_only()
     async def emojiinfo(self, interaction:discord.Interaction, emoji: app_commands.Transform[discord.Emoji, EmojiTransformer]):
@@ -60,7 +59,6 @@ class Misc(commands.Cog):
 
     @app_commands.command(name="emojis")
     @app_commands.guild_only()
-    @app_commands.guilds(discord.Object(id=876848789531549786), discord.Object(id=747524774569443429))
     @app_commands.check(guild_with_emoji_only)
     async def emojis(self, interaction: discord.Interaction):
         """List all the server emojis grouped by roles"""

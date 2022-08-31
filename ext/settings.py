@@ -118,4 +118,4 @@ class Settings(commands.GroupCog, name="persistent-roles"):
 
 
 async def setup(bot):
-    await bot.add_cog(Settings(bot), guilds=[discord.Object(id=876848789531549786), discord.Object(id=747524774569443429)])
+    await bot.add_cog(Settings(bot))

@@ -38,7 +38,6 @@ class Core(commands.Cog):
     @app_commands.guild_only()
     @app_commands.autocomplete(emoji=emoji_autocomplete)
     @app_commands.describe(emoji="The emoji to lock", role="The role to lock the emoji to", ignore_persistent="Whether to ignore or not the persistent roles")
-    @app_commands.guilds(discord.Object(id=876848789531549786), discord.Object(id=747524774569443429))
     async def lock(self, interaction: discord.Interaction, emoji: app_commands.Transform[discord.Emoji, EmojiTransformer], role: discord.Role, ignore_persistent: bool=False):
         """Lock an emoji, making it available only to the roles specified and the persistent roles"""
         await interaction.response.defer()
@@ -69,7 +68,6 @@ class Core(commands.Cog):
     @app_commands.guild_only()
     @app_commands.autocomplete(emoji=locked_emoji_autocomplete)
     @app_commands.describe(emoji="The emoji to unlock")
-    @app_commands.guilds(discord.Object(id=876848789531549786), discord.Object(id=747524774569443429))
     async def unlock(self, interaction: discord.Interaction, emoji: app_commands.Transform[discord.Emoji, EmojiTransformer]):
         """Unlock an emoji, making it available to everyone"""
         if emoji.guild != interaction.guild:
@@ -91,7 +89,6 @@ class Core(commands.Cog):
     @app_commands.command(name="unlockall")
     @app_commands.default_permissions(manage_emojis=True)
     @app_commands.guild_only()
-    @app_commands.guilds(discord.Object(id=876848789531549786), discord.Object(id=747524774569443429))
     async def unlockall(self, interaction: discord.Interaction):
         """Unlock every emoji in the server, making them available to everyone"""
         emojis = [
@@ -122,7 +119,6 @@ class Core(commands.Cog):
                            keep="Lock the emojis to the roles that they are already locked to + the new roles",
                            ignore_persistent="Whether to ignore or not the persistent roles")
     @app_commands.guild_only()
-    @app_commands.guilds(discord.Object(id=876848789531549786), discord.Object(id=747524774569443429))
     async def lockall(self, interaction: discord.Interaction, roles: app_commands.Transform[set[discord.Role], RolesTransformer], keep: bool=False, ignore_persistent: bool=False):
         """Lock every emoji in the server, making them available to the roles specified"""
 
@@ -159,7 +155,6 @@ class Core(commands.Cog):
                            roles="Comma separated list of roles to lock the emojis to",
                            keep="Lock the emojis to the roles that they are already locked to + the new roles",
                            ignore_persistent="Whether to ignore or not the persistent roles")
-    @app_commands.guilds(discord.Object(id=876848789531549786), discord.Object(id=747524774569443429))
     async def multiple(self, interaction: discord.Interaction, emojis: app_commands.Transform[set[discord.Emoji], EmojisTransformer],
     roles: app_commands.Transform[set[discord.Role], RolesTransformer],
     keep: bool=False, ignore_persistent: bool=False

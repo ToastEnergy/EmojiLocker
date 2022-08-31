@@ -130,7 +130,6 @@ class Events(commands.Cog):
             pass
 
     @app_commands.command()
-    @app_commands.guilds(discord.Object(id=config.support_server_id))
     @app_commands.check(owner_only)
     async def vt(self, interaction: discord.Interaction, tid: int):
         paginator = commands.Paginator(suffix='```', prefix='```')
