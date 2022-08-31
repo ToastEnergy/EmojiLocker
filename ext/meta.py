@@ -22,44 +22,39 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import time
-
-import discord.utils
+import discord
 from discord.ext import commands
+from discord import app_commands
 
 
 class Meta(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=('info', 'aboutme', 'bot', 'stats', 'botstats'))
-    async def about(self, ctx):
-        """Info about the bot itself."""
-        await ctx.send_help()
-
-    @commands.command()
-    async def ping(self, ctx):
+    @app_commands.command()
+    async def ping(self, interaction: discord.Interaction):
         """Check the API/Websocket latency"""
         start = time.perf_counter()
-        message = await ctx.send("Pinging...")
+        message = await interaction.response.send_message("Pinging...")
         end = time.perf_counter()
         duration = (end - start) * 1000
-        await message.edit(
+        await interaction.edit_original_response(
             content=f':ping_pong: **Pong!** : {round(duration)}ms\n:ping_pong: **Latency** : {round(self.bot.latency * 1000)}ms')
 
-    @commands.command()
-    async def vote(self, ctx):
+    @app_commands.command()
+    async def vote(self, interaction: discord.Interaction):
         """Upvote the bot"""
-        await ctx.send("Do you like the bot? Upvote it at https://top.gg/bot/609087387695316992")
+        await interaction.response.send_message("Do you like the bot? Upvote it at https://top.gg/bot/609087387695316992")
 
-    @commands.command()
-    async def invite(self, ctx):
+    @app_commands.command(name="invite")
+    async def invite(self, interaction: discord.Interaction):
         """Get a quick invite for the bot"""
         url = discord.utils.oauth_url(self.bot.user.id, permissions=discord.Permissions(1074023424), scopes=['bot',
                                                                                                              'applications.commands'])
         view = discord.ui.View()
         button = discord.ui.Button(style=discord.ButtonStyle.url,label="Invite",url=url)
         view.add_item(button)
-        await ctx.reply_embed(embed=discord.Embed(title='Thanks for using Emoji Locker!'), view=view)
+        await interaction.response.send_message(embed=discord.Embed(title='Thanks for using Emoji Locker!'), view=view)
 
 
 async def setup(bot):

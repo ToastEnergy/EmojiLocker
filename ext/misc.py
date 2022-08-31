@@ -27,21 +27,13 @@ import config
 import discord
 from discord.ext import commands
 from discord import app_commands
-from utils.lockviews import PacksView
+from utils.views import PacksView
 from utils.checks import guild_with_emoji_only
 from utils.transformers import EmojiTransformer
 
 class Misc(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    async def cog_check(self, ctx):
-        if not ctx.guild:
-            raise commands.NoPrivateMessage()
-        if len(ctx.guild.emojis) == 0:
-            raise commands.BadArgument('There are no emojis in this server!')
-
-        return True
 
     @app_commands.command(name="emojiinfo")
     @app_commands.guild_only()
