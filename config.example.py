@@ -21,6 +21,7 @@ database = ""
 password = ""
 
 # server
+support_server_id = 123456789123456789
 support_server = ""
 error_webhook = ""
 commands_webhook = ""
