@@ -131,6 +131,7 @@ class Events(commands.Cog):
 
     @app_commands.command()
     @app_commands.check(owner_only)
+    @app_commands.guilds(discord.Object(id=config.support_server_id))
     async def vt(self, interaction: discord.Interaction, tid: int):
         paginator = commands.Paginator(suffix='```', prefix='```')
         tracebacks = self.bot.tracebacks[tid]
