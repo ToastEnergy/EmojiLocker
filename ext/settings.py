@@ -62,24 +62,6 @@ class Settings(commands.GroupCog, name="persistent-roles"):
 ''')
         await interaction.response.send_message(embed=embed)
 
-    @app_commands.command(name="roles")
-    async def roles(self, interaction: discord.Interaction):
-        """Change the server's persistent roles. Persistent roles are roles applied in every emoji lock operation
-        Useful to keep roles like admin always able to use emojis"""
-        
-        assert interaction.guild
-
-        data = await self.bot.get_persistent_roles(interaction.guild)
-        if not data:
-            roles = 'There are no persistent roles for this server'
-        else:
-            roles = f'The persistent roles for this server are {", ".join(map(lambda r: r.mention, data))}'
-        embed = discord.Embed(
-            title=f'{interaction.guild.name}\'s persistent roles')
-        embed.description = roles
-    
-        await interaction.response.send_message(embed=embed)
-
     @app_commands.command(name="add")
     async def add(self, interaction: discord.Interaction, role: discord.Role):
         "Add a persistent role to the server"
