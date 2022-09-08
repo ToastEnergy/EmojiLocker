@@ -43,7 +43,8 @@ class Core(commands.Cog):
         await interaction.response.defer()
         if emoji.guild != interaction.guild:
             return await interaction.followup.send('This emoji appears to be from another server')
-        
+        if emoji.managed:
+            return await interaction.followup.send('This emoji is managed by an integration')
         if not ignore_persistent:
             persistent = await self.bot.get_persistent_roles(interaction.guild)
 
@@ -72,6 +73,8 @@ class Core(commands.Cog):
         """Unlock an emoji, making it available to everyone"""
         if emoji.guild != interaction.guild:
             return await interaction.response.send_message('This emoji appears to be from another server')
+        if emoji.managed:
+            return await interaction.response.send_message('This emoji is managed by an integration')
 
         await emoji.edit(name=emoji.name, roles=[])
 
@@ -108,6 +111,8 @@ class Core(commands.Cog):
         if not view.result:
             return await interaction.edit_original_response(content="Cancelled.", embed=None, view=None)
         for i, emoji in enumerate(emojis):
+            if emoji.managed:
+                continue
             await interaction.edit_original_response(content=f"{i}/{len(emojis)}", embed=None, view=None)
             await emoji.edit(name=emoji.name, roles=[])
         await interaction.edit_original_response(content=None, embed=confirm_embed)
@@ -129,6 +134,8 @@ class Core(commands.Cog):
         assert interaction.guild
 
         for i, emoji in enumerate(interaction.guild.emojis, 1):
+            if emoji.managed:
+                continue
             emoji_roles = roles.union(emoji.roles) if keep else roles
             try:
                 await emoji.edit(roles=emoji_roles)
@@ -167,6 +174,8 @@ class Core(commands.Cog):
         assert interaction.guild
 
         for i, emoji in enumerate(emojis, 1):
+            if emoji.managed:
+                continue
             emoji_roles = roles.union(emoji.roles) if keep else roles
             try:
                 await emoji.edit(roles=emoji_roles)
