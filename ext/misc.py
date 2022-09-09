@@ -27,6 +27,7 @@ import config
 import discord
 from discord.ext import commands
 from discord import app_commands
+from utils.autocompletes import emoji_autocomplete
 from utils.views import PacksView
 from utils.checks import guild_with_emoji_only
 from utils.transformers import EmojiTransformer
@@ -38,6 +39,7 @@ class Misc(commands.Cog):
     @app_commands.command(name="emojiinfo")
     @app_commands.guild_only()
     @app_commands.describe(emoji="The emoji to get info on")
+    @app_commands.autocomplete(emoji=emoji_autocomplete)
     @app_commands.check(guild_with_emoji_only)
     @commands.guild_only()
     async def emojiinfo(self, interaction:discord.Interaction, emoji: app_commands.Transform[discord.Emoji, EmojiTransformer]):
