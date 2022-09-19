@@ -70,7 +70,7 @@ class Settings(commands.GroupCog, name="persistent-roles"):
         try:
             await self.bot.db.add_roles(interaction.guild.id, [role.id])
         except asyncpg.exceptions.UniqueViolationError:
-            await interaction.response.send_message('One of the roles was already added.', ephemeral=True)
+            return await interaction.response.send_message('One of the roles was already added.', ephemeral=True)
         await interaction.response.send_message(f'{role.mention} is now a persistent role for this server', allowed_mentions=discord.AllowedMentions().none())
 
     @app_commands.command(name="remove")
