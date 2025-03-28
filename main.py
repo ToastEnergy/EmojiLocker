@@ -77,14 +77,17 @@ class EmojiLocker(commands.AutoShardedBot):
 
     async def setup_hook(self):
         await self.load_extension('jishaku')
-        for filename in os.listdir('./ext'):
-            if filename.endswith('.py') and not filename.startswith('_'):
-                await self.load_extension(f'ext.{filename[:-3]}')
-                print(f'Loaded {filename}')
+
 
     async def on_ready(self):
         print(f'logged in as {self.user}')
-
+        if self.first_ready:
+            for filename in os.listdir('./ext'):
+                if filename.endswith('.py') and not filename.startswith('_'):
+                    await self.load_extension(f'ext.{filename[:-3]}')
+                    print(f'Loaded {filename}')
+            self.first_ready = False
+            
     async def get_persistent_roles(self, guild: discord.Guild):
         data = await self.db.get_roles(guild.id)
         res = list()
