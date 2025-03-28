@@ -25,12 +25,10 @@ import asyncio
 from discord.ext import commands, tasks
 import config
 
-
 class BotLists(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.topgg = f"https://top.gg/api/bots/{self.bot.user.id}/stats"
-        self.dbots = f"https://discord.bots.gg/api/v1/bots/{self.bot.user.id}/stats"
         self.autopost.start()
 
     @tasks.loop(minutes=30)
@@ -42,17 +40,10 @@ class BotLists(commands.Cog):
             r = await self.bot.session.post(self.topgg, data=payload, headers=headers)
             t = await r.text()
             print(f"Server count posted to top.gg with status code {r.status} {t}")
+            if config.uptime_monitor:
+                await self.bot.session.get(config.uptime_url+f"&ping={round(self.bot.latency * 1000)}&msg={len(self.bot.guilds)} guilds")
         except:
             print("Failed to post server count to top.gg")
-
-        try:
-            payload = {"guildCount": len(self.bot.guilds), "shardCount": len(self.bot.shards)}
-            headers = {"Authorization": config.DBOTS_TOKEN}
-            r = await self.bot.session.post(self.dbots, data=payload, headers=headers)
-            t = await r.text()
-            print(f"Server count posted to discord.bots.gg with status code {r.status} {t}")
-        except:
-            print("Failed to post server count to discord.bots.gg")
 
     def cog_unload(self):
         self.autopost.cancel()
